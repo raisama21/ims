@@ -13,6 +13,7 @@ async function seedGroups() {
             CREATE TABLE IF NOT EXISTS "groups" (
                 id UUID NOT NULL DEFAULT uuid_generate_v4(),
                 business_name VARCHAR(256) UNIQUE NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
                 PRIMARY KEY (id)
             )
@@ -48,6 +49,7 @@ async function seedUsers() {
                 email VARCHAR(256) UNIQUE NOT NULL,
                 password VARCHAR(256) NOT NULL,
                 roles USER_ROLES NOT NULL DEFAULT 'admin',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
                 PRIMARY KEY (id),
                 FOREIGN KEY (group_id) REFERENCES groups (id)
@@ -67,6 +69,7 @@ async function seedCategories() {
                 id UUID NOT NULL DEFAULT uuid_generate_v4(),
                 group_id UUID NOT NULL,
                 category_name VARCHAR(256) NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
                 PRIMARY KEY (id),
                 FOREIGN KEY (group_id) REFERENCES groups (id)
@@ -89,9 +92,32 @@ async function seedCustomer() {
                 last_name VARCHAR(256) NOT NULL,
                 email VARCHAR(256) UNIQUE NOT NULL,
                 phone_number NUMERIC(256) NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
                 PRIMARY KEY (id),
                 FOREIGN KEY (group_id) REFERENCES groups (id)
+            )
+        `;
+
+        console.log("created 'customer' table");
+    } catch (error) {
+        console.log("error while trying to seed 'customer' table: ", error);
+    }
+}
+
+async function seedCustomerAddress() {
+    try {
+        await sql`
+            CREATE TABLE IF NOT EXISTS "customer_address" (
+                id UUID NOT NULL DEFAULT uuid_generate_v4(),
+                customer_id UUID NOT NULL,
+                street_address VARCHAR(256) NOT NULL,
+                city VARCHAR(256) NOT NULL,
+                provience VARCHAR(256) NOT NULL,
+                postal_code NUMERIC NOT NULL,
+
+                PRIMARY KEY (id),
+                FOREIGN KEY (customer_id) REFERENCES customers (id)
             )
         `;
 
@@ -127,10 +153,10 @@ async function seedProducts() {
                 stock NUMERIC NOT NULL,
                 purchase_price NUMERIC NOT NULL,
                 selling_price NUMERIC NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
                 PRIMARY KEY (id),
                 FOREIGN KEY (group_id) REFERENCES groups (id)
-
             )
         `;
 
@@ -142,19 +168,6 @@ async function seedProducts() {
 
 async function seedOrders() {
     try {
-        await sql`
-            DO $$
-            BEGIN
-                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN
-                   CREATE TYPE payment_method as ENUM (
-                       'e-wallet',
-                       'mobile-banking',
-                       'in-person'
-                   );
-                END IF; 
-            END$$;
-        `;
-
         await sql`
             DO $$
             BEGIN
@@ -172,21 +185,17 @@ async function seedOrders() {
                 id UUID NOT NULL DEFAULT uuid_generate_v4(),
                 group_id UUID NOT NULL,
                 customer_id UUID NOT NULL,
+                customer_address_id UUID NOT NULL,
                 sub_total NUMERIC NOT NULL,
                 delivery_charge NUMERIC,
                 discount_in_percentage NUMERIC,
                 total NUMERIC NOT NULL,
-                street_address VARCHAR(256) NOT NULL,
-                city VARCHAR(256) NOT NULL,
-                provience VARCHAR(256) NOT NULL,
-                postal_code NUMERIC NOT NULL,
-                payment_method PAYMENT_METHOD NOT NULL,
-                payment_id VARCHAR(256),
-                status ORDER_STATUS NOT NULL DEFAULT 'pending',
-                created_at DATE NOT NULL DEFAULT NOW(),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
                 PRIMARY KEY (id),
-                FOREIGN KEY (group_id) REFERENCES groups(id)
+                FOREIGN KEY (group_id) REFERENCES groups(id),
+                FOREIGN KEY (customer_id) REFERENCES customers(id),
+                FOREIGN KEY (customer_address_id) REFERENCES customer_address(id)
             )
         `;
         console.log("created 'orders' table");
@@ -195,25 +204,115 @@ async function seedOrders() {
     }
 }
 
-async function seedProductOrderDetails() {
+async function seedOrderTracking() {
     try {
         await sql`
-            CREATE TABLE IF NOT EXISTS "product-order-details" (
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_tracking_status') THEN
+                   CREATE TYPE order_tracking_status as ENUM (
+                       'order_created',
+                       'processing',
+                       'shipped',
+                       'delivered'
+                   );
+                END IF; 
+            END$$;
+        `;
+
+        await sql`
+            CREATE TABLE IF NOT EXISTS "order_tracking" (
+                id UUID NOT NULL DEFAULT uuid_generate_v4(),
+                group_id UUID NOT NULL,
+                order_id UUID NOT NULL,
+                customer_id UUID NOT NULL,
+                status ORDER_TRACKING_STATUS NOT NULL DEFAULT 'order_created',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                processed_at TIMESTAMPTZ,
+                shipped_at TIMESTAMPTZ,
+                delivered_at TIMESTAMPTZ,
+
+                FOREIGN KEY (group_id) REFERENCES groups(id),
+                FOREIGN KEY (customer_id) REFERENCES customers(id),
+                FOREIGN KEY (order_id) REFERENCES orders(id),
+                PRIMARY KEY (id)
+            )
+        `;
+        console.log("created 'order_tracking' table");
+    } catch (error) {
+        console.log(
+            "error while trying to seed 'order_tracking' table: ",
+            error
+        );
+    }
+}
+
+async function seedOrderDetails() {
+    try {
+        await sql`
+            CREATE TABLE IF NOT EXISTS "order_details" (
                 id UUID NOT NULL DEFAULT uuid_generate_v4(),
                 order_id UUID NOT NULL,
                 product_name VARCHAR(256) NOT NULL,
                 quantity NUMERIC NOT NULL,
+                price NUMERIC NOT NULL,
 
                 PRIMARY KEY (id),
                 FOREIGN KEY (order_id) REFERENCES orders(id)
             )
         `;
-        console.log("created 'product-order-details' table");
+        console.log("created 'order_details' table");
     } catch (error) {
         console.log(
-            "error while trying to seed 'product-order-details' table: ",
+            "error while trying to seed 'order_details' table: ",
             error
         );
+    }
+}
+
+async function seedPayments() {
+    try {
+        await sql`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN
+                   CREATE TYPE payment_method as ENUM (
+                       'e-wallet',
+                       'mobile-banking',
+                       'in-person'
+                   );
+                END IF; 
+            END$$;
+        `;
+
+        await sql`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
+                   CREATE TYPE payment_status as ENUM (
+                       'pending',
+                       'paid'
+                   );
+                END IF; 
+            END$$;
+        `;
+
+        await sql`
+            CREATE TABLE IF NOT EXISTS "payments" (
+                id UUID NOT NULL DEFAULT uuid_generate_v4(),
+                order_id UUID NOT NULL,
+                payment_method PAYMENT_METHOD,
+                payment_id NUMERIC, 
+                status PAYMENT_STATUS NOT NULL DEFAULT 'pending',
+
+                PRIMARY KEY (id),
+                FOREIGN KEY (order_id) REFERENCES orders(id)
+            )
+        `;
+
+        console.log("created 'payments' table");
+    } catch (error) {
+        console.log("error while trying to seed 'payments' table: ", error);
     }
 }
 
@@ -222,9 +321,12 @@ async function main() {
     await seedUsers();
     await seedCategories();
     await seedCustomer();
+    await seedCustomerAddress();
     await seedProducts();
     await seedOrders();
-    await seedProductOrderDetails();
+    await seedOrderTracking();
+    await seedOrderDetails();
+    await seedPayments();
 
     sql.end();
 }

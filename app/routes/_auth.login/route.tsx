@@ -8,7 +8,10 @@ import { Input } from "~/app/components/ui/input";
 import { Label } from "~/app/components/ui/label";
 import { authCookie } from "~/app/cookie.server";
 
-import authentication, { LoginFormSchema, validate } from "~/app/lib/actions/auth/login";
+import authentication, {
+    LoginFormSchema,
+    validate,
+} from "~/app/lib/actions/auth/login";
 
 export async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
@@ -16,17 +19,17 @@ export async function action({ request }: ActionFunctionArgs) {
         typeof LoginFormSchema
     >;
 
-    const errors = await validate(loginData);
+    const { safeParse, errors } = await validate(loginData);
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    const user = await authentication(loginData);
+    const user = await authentication(safeParse.data);
 
     return redirect("/dashboard", {
         headers: {
-            "Set-Cookie": await authCookie.serialize(user)
-        }
+            "Set-Cookie": await authCookie.serialize(user),
+        },
     });
 }
 
@@ -51,10 +54,10 @@ export default function Login() {
                             name="businessName"
                             placeholder="ABC business"
                         />
-                        {actionData?.state?.errors.businessName && (
+                        {actionData?.errors.businessName && (
                             <div>
                                 <p className="pl-2 text-xs font-medium text-red-500">
-                                    {actionData?.state?.errors.businessName[0]}
+                                    {actionData?.errors.businessName[0]}
                                 </p>
                             </div>
                         )}
@@ -67,10 +70,10 @@ export default function Login() {
                             name="email"
                             placeholder="m@example.com"
                         />
-                        {actionData?.state?.errors.email && (
+                        {actionData?.errors.email && (
                             <div>
                                 <p className="pl-2 text-xs font-medium text-red-500">
-                                    {actionData?.state?.errors.email[0]}
+                                    {actionData?.errors.email[0]}
                                 </p>
                             </div>
                         )}
@@ -81,10 +84,10 @@ export default function Login() {
                         </div>
                         <Input id="password" type="password" name="password" />
 
-                        {actionData?.state?.errors.password && (
+                        {actionData?.errors.password && (
                             <div>
                                 <p className="pl-2 text-xs font-medium text-red-500">
-                                    {actionData?.state?.errors.password[0]}
+                                    {actionData?.errors.password[0]}
                                 </p>
                             </div>
                         )}

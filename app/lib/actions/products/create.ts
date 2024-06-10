@@ -1,4 +1,4 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
 import z from "zod";
 import { Products } from "~/app/lib/defitions";
 
@@ -6,33 +6,44 @@ export const AddProductsFormSchema = z.object({
     productName: z
         .string()
         .trim()
+        .toLowerCase()
         .min(1, { message: "product name required" })
         .min(3, { message: "product name must be at least 3 character long" }),
     description: z
         .string()
         .trim()
+        .toLowerCase()
         .min(1, { message: "description required" })
         .min(3, { message: "description must be at least 10 character long" }),
-    category: z.string().trim().min(1, { message: "category required" }),
-    status: z.string().trim().min(1, { message: "status required" }),
-    stock: z.number().min(1, { message: "required" }),
-    purchasePrice: z.number().min(1, { message: "required" }),
-    sellingPrice: z.number().min(1, { message: "required" }),
+    category: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .min(1, { message: "category required" }),
+    status: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .min(1, { message: "status required" }),
+    stock: z
+        .string()
+        .min(1, { message: "required" })
+        .transform((val) => parseInt(val, 10)),
+    purchasePrice: z
+        .string()
+        .min(1, { message: "required" })
+        .transform((val) => parseInt(val, 10)),
+    sellingPrice: z
+        .string()
+        .min(1, { message: "required" })
+        .transform((val) => parseInt(val, 10)),
 });
 
 export async function validate(
     data: z.infer<typeof AddProductsFormSchema>,
     groupId: string
 ) {
-    const formFields = AddProductsFormSchema.safeParse({
-        productName: data.productName,
-        description: data.description,
-        category: data.category,
-        status: data.status,
-        stock: data.stock,
-        purchasePrice: data.purchasePrice,
-        sellingPrice: data.sellingPrice,
-    });
+    const formFields = AddProductsFormSchema.safeParse(data);
 
     if (!formFields.success) {
         return {
@@ -54,6 +65,8 @@ export async function validate(
             },
         };
     }
+
+    return { safeParse: formFields };
 }
 
 export default async function addProduct(

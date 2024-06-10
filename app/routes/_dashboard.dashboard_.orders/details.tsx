@@ -30,14 +30,19 @@ import {
     PaginationItem,
 } from "~/app/components/ui/pagination";
 import { Separator } from "~/app/components/ui/separator";
+import type { OrderDetails } from "~/app/lib/data/orders";
 
-export default function OrderDetails() {
+export default function OrderDetails({
+    details,
+}: {
+    details: OrderDetails | undefined;
+}) {
     return (
         <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
             <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
                     <CardTitle className="group flex items-center gap-2 text-lg">
-                        Order Oe31b70H
+                        Order {details?.id.split("-")[0]}
                         <Button
                             size="icon"
                             variant="outline"
@@ -50,12 +55,18 @@ export default function OrderDetails() {
                     <CardDescription>Date: November 23, 2023</CardDescription>
                 </div>
                 <div className="ml-auto flex items-center gap-1">
-                    <Button size="sm" variant="outline" className="h-8 gap-1">
-                        <Truck className="h-3.5 w-3.5" />
-                        <span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-                            Track Order
-                        </span>
-                    </Button>
+                    <Link to={`${details?.id}/track-order`}>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1"
+                        >
+                            <Truck className="h-3.5 w-3.5" />
+                            <span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
+                                Track Order
+                            </span>
+                        </Button>
+                    </Link>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -80,18 +91,20 @@ export default function OrderDetails() {
                 <div className="grid gap-3">
                     <div className="font-semibold">Order Details</div>
                     <ul className="grid gap-3">
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">
-                                Glimmer Lamps x <span>2</span>
-                            </span>
-                            <span>$250.00</span>
-                        </li>
-                        <li className="flex items-center justify-between">
-                            <span className="text-muted-foreground">
-                                Aqua Filters x <span>1</span>
-                            </span>
-                            <span>$49.00</span>
-                        </li>
+                        {details?.products.map((product) => {
+                            return (
+                                <li
+                                    className="flex items-center justify-between"
+                                    key={product.name}
+                                >
+                                    <span className="text-muted-foreground">
+                                        {product.name} x{" "}
+                                        <span>{product.quantity}</span>
+                                    </span>
+                                    <span>₹{product.price}</span>
+                                </li>
+                            );
+                        })}
                     </ul>
                     <Separator className="my-2" />
                     <ul className="grid gap-3">
@@ -99,23 +112,23 @@ export default function OrderDetails() {
                             <span className="text-muted-foreground">
                                 Subtotal
                             </span>
-                            <span>$299.00</span>
+                            <span>₹{details?.sub_total}</span>
                         </li>
                         <li className="flex items-center justify-between">
                             <span className="text-muted-foreground">
                                 Delivery
                             </span>
-                            <span>$5.00</span>
+                            <span>₹{details?.delivery_charge}</span>
                         </li>
                         <li className="flex items-center justify-between">
                             <span className="text-muted-foreground">
                                 Discount
                             </span>
-                            <span>$25.00</span>
+                            <span>₹{details?.discount_in_percentage}</span>
                         </li>
                         <li className="flex items-center justify-between font-semibold">
                             <span className="text-muted-foreground">Total</span>
-                            <span>$329.00</span>
+                            <span>₹{details?.total}</span>
                         </li>
                     </ul>
                 </div>
@@ -126,9 +139,13 @@ export default function OrderDetails() {
                             Delivery Information
                         </div>
                         <address className="grid gap-0.5 not-italic text-muted-foreground">
-                            <span>Liam Johnson</span>
-                            <span>1234 Main St.</span>
-                            <span>Anytown, CA 12345</span>
+                            <span>
+                                {details?.first_name} {details?.last_name}
+                            </span>
+                            <span>{details?.street_address}</span>
+                            <span>
+                                {details?.city}, {details?.postal_code}
+                            </span>
                         </address>
                     </div>
                     {/**
@@ -146,18 +163,20 @@ export default function OrderDetails() {
                     <dl className="grid gap-3">
                         <div className="flex items-center justify-between">
                             <dt className="text-muted-foreground">Customer</dt>
-                            <dd>Liam Johnson</dd>
+                            <dd>
+                                {details?.first_name} {details?.last_name}
+                            </dd>
                         </div>
                         <div className="flex items-center justify-between">
                             <dt className="text-muted-foreground">Email</dt>
                             <dd>
-                                <Link to="mailto:">liam@acme.com</Link>
+                                <Link to="mailto:">{details?.email}</Link>
                             </dd>
                         </div>
                         <div className="flex items-center justify-between">
                             <dt className="text-muted-foreground">Phone</dt>
                             <dd>
-                                <Link to="tel:">+1 234 567 890</Link>
+                                <Link to="tel:">{details?.phone_number}</Link>
                             </dd>
                         </div>
                     </dl>

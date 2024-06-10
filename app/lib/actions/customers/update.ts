@@ -1,4 +1,4 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
 import z from "zod";
 
 export const UpdateCustomersFormSchema = z.object({

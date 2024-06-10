@@ -64,26 +64,21 @@ export async function action({ request }: ActionFunctionArgs) {
     const orderData = {
         product: formData.getAll("product"),
         quantity: formData.getAll("quantity"),
+        price: formData.getAll("price"),
         subTotal: formData.get("subTotal"),
-        deliveryCharge: formData.get("deliveryCharge"),
-        discount: formData.get("discount"),
         total: formData.get("total"),
         customer: formData.get("customer"),
-        paymentMethod: formData.get("paymentMethod"),
-        paymentId: formData.get("paymentId"),
-        streetAddress: formData.get("streetAddress"),
-        city: formData.get("city"),
-        provience: formData.get("provience"),
-        postalCode: formData.get("postalCode"),
+        deliveryCharge: formData.get("deliveryCharge"),
+        discount: formData.get("discount"),
     } as unknown as z.infer<typeof CreateOrdersFormSchema>;
-    console.log(orderData);
 
-    const errors = await validate(orderData);
+    const { safeParse, errors } = await validate(orderData);
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
+    console.log(safeParse.data);
 
-    await createOrder(orderData, session.groupId);
+    await createOrder(safeParse.data, session.groupId);
 
     return redirect("/dashboard/orders");
 }
@@ -132,11 +127,11 @@ export default function Create() {
                             <CardTitle>Order Details</CardTitle>
                         </CardHeader>
                         <CardContent className="grid gap-4">
-                            {products.map((product) => {
+                            {selectedProducts?.map((product) => {
                                 return (
                                     <div
-                                        className="grid grid-cols-[repeat(2,1fr)] gap-3"
-                                        key={product}
+                                        className="grid grid-cols-[repeat(3,1fr)] gap-3"
+                                        key={product.id}
                                     >
                                         <div>
                                             <Label htmlFor="product">
@@ -146,16 +141,39 @@ export default function Create() {
                                                 id="product"
                                                 type="text"
                                                 name="product"
-                                                defaultValue={product}
+                                                defaultValue={
+                                                    product.product_name
+                                                }
                                             />
-                                            {actionData?.state.errors
-                                                .product && (
+                                            {actionData?.errors.product && (
                                                 <div>
                                                     <p className="pl-2 text-xs font-medium text-red-500">
                                                         {
-                                                            actionData?.state
-                                                                .errors
+                                                            actionData?.errors
                                                                 .product[0]
+                                                        }
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="price">
+                                                Product price
+                                            </Label>
+                                            <Input
+                                                id="price"
+                                                type="number"
+                                                name="price"
+                                                defaultValue={
+                                                    product.selling_price
+                                                }
+                                            />
+                                            {actionData?.errors.price && (
+                                                <div>
+                                                    <p className="pl-2 text-xs font-medium text-red-500">
+                                                        {
+                                                            actionData?.errors
+                                                                .price[0]
                                                         }
                                                     </p>
                                                 </div>
@@ -170,13 +188,11 @@ export default function Create() {
                                                 type="number"
                                                 name="quantity"
                                             />
-                                            {actionData?.state.errors
-                                                .quantity && (
+                                            {actionData?.errors.quantity && (
                                                 <div>
                                                     <p className="pl-2 text-xs font-medium text-red-500">
                                                         {
-                                                            actionData?.state
-                                                                .errors
+                                                            actionData?.errors
                                                                 .quantity[0]
                                                         }
                                                     </p>
@@ -241,13 +257,10 @@ export default function Create() {
                                         });
                                     }}
                                 />
-                                {actionData?.state.errors.subTotal && (
+                                {actionData?.errors.subTotal && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .subTotal[0]
-                                            }
+                                            {actionData?.errors.subTotal[0]}
                                         </p>
                                     </div>
                                 )}
@@ -262,11 +275,11 @@ export default function Create() {
                                     name="deliveryCharge"
                                     placeholder="1000"
                                 />
-                                {actionData?.state.errors.deliveryCharge && (
+                                {actionData?.errors.deliveryCharge && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
                                             {
-                                                actionData?.state.errors
+                                                actionData?.errors
                                                     .deliveryCharge[0]
                                             }
                                         </p>
@@ -274,22 +287,17 @@ export default function Create() {
                                 )}
                             </div>
                             <div className="grid gap-3">
-                                <Label htmlFor="discountInPercentage">
-                                    Discount
-                                </Label>
+                                <Label htmlFor="discount">Discount</Label>
                                 <Input
-                                    id="discountInPercentage"
+                                    id="discount"
                                     type="number"
-                                    name="discountInPercentage"
+                                    name="discount"
                                     placeholder="10%"
                                 />
-                                {actionData?.state.errors.discount && (
+                                {actionData?.errors.discount && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .discount[0]
-                                            }
+                                            {actionData?.errors.discount[0]}
                                         </p>
                                     </div>
                                 )}
@@ -302,10 +310,10 @@ export default function Create() {
                                     name="total"
                                     placeholder="9000"
                                 />
-                                {actionData?.state.errors.total && (
+                                {actionData?.errors.total && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {actionData?.state.errors.total[0]}
+                                            {actionData?.errors.total[0]}
                                         </p>
                                     </div>
                                 )}
@@ -344,167 +352,10 @@ export default function Create() {
                                         )}
                                     </SelectContent>
                                 </Select>
-                                {actionData?.state.errors.customer && (
+                                {actionData?.errors.customer && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .customer[0]
-                                            }
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Payment Method</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid gap-3">
-                            <div className="grid gap-3">
-                                <Label htmlFor="paymentMethod">Method</Label>
-                                <Select name="paymentMethod">
-                                    <SelectTrigger
-                                        id="paymentMethod"
-                                        aria-label="payment method"
-                                    >
-                                        <SelectValue placeholder="Select payment method" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            className="capitalize"
-                                            value="e-wallet"
-                                        >
-                                            E-wallet
-                                        </SelectItem>
-                                        <SelectItem
-                                            className="capitalize"
-                                            value="mobile-banking"
-                                        >
-                                            Mobile Banking
-                                        </SelectItem>
-                                        <SelectItem
-                                            className="capitalize"
-                                            value="in-person"
-                                        >
-                                            In Person
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                {actionData?.state.errors.paymentMethod && (
-                                    <div>
-                                        <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .paymentMethod[0]
-                                            }
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="grid gap-3">
-                                <Label htmlFor="phoneNumber">
-                                    Mo-bank / e-wallet
-                                </Label>
-                                <Input
-                                    id="paymentId"
-                                    type="text"
-                                    placeholder="ID: 9825******"
-                                    name="paymentId"
-                                />
-                                {actionData?.state.errors.paymentId && (
-                                    <div>
-                                        <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .paymentId[0]
-                                            }
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Delivery Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid gap-4">
-                            <div className="grid gap-3">
-                                <Label htmlFor="streetAddress">
-                                    Street Address
-                                </Label>
-                                <Input
-                                    id="streetAddress"
-                                    type="text"
-                                    placeholder="Dhumbarahi pipalbot"
-                                    name="streetAddress"
-                                />
-                                {actionData?.state.errors.streetAddress && (
-                                    <div>
-                                        <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .streetAddress[0]
-                                            }
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="city">City</Label>
-                                <Input
-                                    id="city"
-                                    type="text"
-                                    placeholder="Kathmandu"
-                                    name="city"
-                                />
-                                {actionData?.state.errors.city && (
-                                    <div>
-                                        <p className="pl-2 text-xs font-medium text-red-500">
-                                            {actionData?.state.errors.city[0]}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="provience">Provience</Label>
-                                <Input
-                                    id="provience"
-                                    type="text"
-                                    placeholder="Bagmati"
-                                    name="provience"
-                                />
-                                {actionData?.state.errors.provience && (
-                                    <div>
-                                        <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .provience[0]
-                                            }
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="postalCode">Postal code</Label>
-                                <Input
-                                    id="postalCode"
-                                    type="number"
-                                    placeholder="Bagmati"
-                                    name="postalCode"
-                                />
-                                {actionData?.state.errors.postalCode && (
-                                    <div>
-                                        <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state.errors
-                                                    .postalCode[0]
-                                            }
+                                            {actionData?.errors.customer[0]}
                                         </p>
                                     </div>
                                 )}

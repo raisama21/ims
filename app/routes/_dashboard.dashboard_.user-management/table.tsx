@@ -80,9 +80,7 @@ export default function UserManagementTable({ users }: { users: Users[] }) {
                                         <DropdownMenuLabel>
                                             Actions
                                         </DropdownMenuLabel>
-                                        <Link
-                                            to={`${user.id}/edit`}
-                                        >
+                                        <Link to={`${user.id}/edit`}>
                                             <DropdownMenuItem>
                                                 Edit
                                             </DropdownMenuItem>

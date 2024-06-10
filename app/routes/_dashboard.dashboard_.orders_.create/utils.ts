@@ -1,2 +1,1 @@
-export function addSubTotal() {
-}
+export function addSubTotal() {}

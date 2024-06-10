@@ -17,6 +17,7 @@ export type Categories = {
     id: string;
     group_id: string;
     category_name: string;
+    created_at: Date;
 };
 
 export type Customers = {
@@ -26,6 +27,7 @@ export type Customers = {
     last_name: string;
     email: string;
     phone_number: number;
+    created_at: Date;
 };
 
 export type Products = {
@@ -57,4 +59,16 @@ export type Orders = {
     payment_method: "e-wallet" | "mobile-banking" | "in-person";
     status: "pending" | "paid";
     date: Date;
+};
+
+export type OrderTracking = {
+    id: string;
+    group_id: string;
+    order_id: string;
+    customer_id: string;
+    status: "order_created" | "processing" | "shipped" | "delivered";
+    created_at: string;
+    processed_at: string;
+    shipped_at: string;
+    delivered_at: string;
 };

@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { redirect, json } from "@remix-run/node";
 import { Link, Form, useLoaderData, useActionData } from "@remix-run/react";
+import z from "zod";
 
 import { ChevronLeft, Upload } from "lucide-react";
 
@@ -31,7 +32,10 @@ import {
 } from "~/app/components/ui/table";
 import { Textarea } from "~/app/components/ui/textarea";
 import { getSession } from "~/app/cookie.server";
-import addProduct, { validate } from "~/app/lib/actions/products/create";
+import addProduct, {
+    AddProductsFormSchema,
+    validate,
+} from "~/app/lib/actions/products/create";
 import { getAllCategories } from "~/app/lib/data/categories";
 
 /**
@@ -58,22 +62,16 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const formData = await request.formData();
-    const productData = {
-        productName: String(formData.get("productName")),
-        description: String(formData.get("description")),
-        category: String(formData.get("category")),
-        status: String(formData.get("status")),
-        stock: Number(formData.get("stock")),
-        purchasePrice: Number(formData.get("purchasePrice")),
-        sellingPrice: Number(formData.get("sellingPrice")),
-    };
+    const productData = Object.fromEntries(formData) as unknown as z.infer<
+        typeof AddProductsFormSchema
+    >;
 
-    const errors = await validate(productData, session.groupId);
+    const { safeParse, errors } = await validate(productData, session.groupId);
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    await addProduct(productData, session.groupId);
+    await addProduct(safeParse.data, session.groupId);
 
     return redirect("/dashboard/products");
 }
@@ -131,18 +129,16 @@ export default function Add() {
                                             className="w-full"
                                             placeholder="Huawei MatePad T8"
                                         />
-                                        {actionData?.state?.errors
-                                            .productName && (
-                                                <div>
-                                                    <p className="pl-2 text-xs font-medium text-red-500">
-                                                        {
-                                                            actionData?.state
-                                                                ?.errors
-                                                                .productName[0]
-                                                        }
-                                                    </p>
-                                                </div>
-                                            )}
+                                        {actionData?.errors.productName && (
+                                            <div>
+                                                <p className="pl-2 text-xs font-medium text-red-500">
+                                                    {
+                                                        actionData?.errors
+                                                            .productName[0]
+                                                    }
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="grid gap-3">
                                         <Label htmlFor="description">
@@ -154,18 +150,16 @@ export default function Add() {
                                             className="min-h-32"
                                             placeholder="It comes equipped with an octa-core chipset, which ensures that you can enjoy faster processing so that you can complete your tasks with ease"
                                         />
-                                        {actionData?.state?.errors
-                                            .description && (
-                                                <div>
-                                                    <p className="pl-2 text-xs font-medium text-red-500">
-                                                        {
-                                                            actionData?.state
-                                                                ?.errors
-                                                                .description[0]
-                                                        }
-                                                    </p>
-                                                </div>
-                                            )}
+                                        {actionData?.errors.description && (
+                                            <div>
+                                                <p className="pl-2 text-xs font-medium text-red-500">
+                                                    {
+                                                        actionData?.errors
+                                                            .description[0]
+                                                    }
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>
@@ -210,19 +204,17 @@ export default function Add() {
                                                     name="stock"
                                                     placeholder="10"
                                                 />
-                                                {actionData?.state?.errors
-                                                    .stock && (
-                                                        <div>
-                                                            <p className="pl-2 text-xs font-medium text-red-500">
-                                                                {
-                                                                    actionData
-                                                                        ?.state
-                                                                        ?.errors
-                                                                        .stock[0]
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                {actionData?.errors.stock && (
+                                                    <div>
+                                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                                            {
+                                                                actionData
+                                                                    ?.errors
+                                                                    .stock[0]
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <Label
@@ -237,19 +229,18 @@ export default function Add() {
                                                     name="purchasePrice"
                                                     placeholder="14000"
                                                 />
-                                                {actionData?.state?.errors
+                                                {actionData?.errors
                                                     .purchasePrice && (
-                                                        <div>
-                                                            <p className="pl-2 text-xs font-medium text-red-500">
-                                                                {
-                                                                    actionData
-                                                                        ?.state
-                                                                        ?.errors
-                                                                        .purchasePrice[0]
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                    <div>
+                                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                                            {
+                                                                actionData
+                                                                    ?.errors
+                                                                    .purchasePrice[0]
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <Label
@@ -264,19 +255,18 @@ export default function Add() {
                                                     name="sellingPrice"
                                                     placeholder="18800"
                                                 />
-                                                {actionData?.state?.errors
+                                                {actionData?.errors
                                                     .sellingPrice && (
-                                                        <div>
-                                                            <p className="pl-2 text-xs font-medium text-red-500">
-                                                                {
-                                                                    actionData
-                                                                        ?.state
-                                                                        ?.errors
-                                                                        .sellingPrice[0]
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                    <div>
+                                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                                            {
+                                                                actionData
+                                                                    ?.errors
+                                                                    .sellingPrice[0]
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     </TableBody>
@@ -322,12 +312,12 @@ export default function Add() {
                                                 )}
                                             </SelectContent>
                                         </Select>
-                                        {actionData?.state?.errors.category && (
+                                        {actionData?.errors.category && (
                                             <div>
                                                 <p className="pl-2 text-xs font-medium text-red-500">
                                                     {
-                                                        actionData?.state
-                                                            ?.errors.category[0]
+                                                        actionData?.errors
+                                                            .category[0]
                                                     }
                                                 </p>
                                             </div>
@@ -362,12 +352,12 @@ export default function Add() {
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        {actionData?.state?.errors.status && (
+                                        {actionData?.errors.status && (
                                             <div>
                                                 <p className="pl-2 text-xs font-medium text-red-500">
                                                     {
-                                                        actionData?.state
-                                                            ?.errors.status[0]
+                                                        actionData?.errors
+                                                            .status[0]
                                                     }
                                                 </p>
                                             </div>

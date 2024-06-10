@@ -1,3 +1,7 @@
+import type { ActionFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { useLoaderData, useSearchParams } from "@remix-run/react";
+
 import { File, ListFilter } from "lucide-react";
 import { Button } from "~/app/components/ui/button";
 import {
@@ -26,8 +30,42 @@ import OrdersTable from "./table";
 import CreateNewOrders from "./create-new-orders";
 import RevenueTracker from "./revenue-tracker";
 import OrderDetails from "./details";
+import { getSession } from "~/app/cookie.server";
+import { getOrderDetails, getOrderTable } from "~/app/lib/data/orders";
+import { useEffect } from "react";
+
+export async function loader({ request }: ActionFunctionArgs) {
+    const session = await getSession(request);
+    if (!session) {
+        return;
+    }
+
+    const orderId = new URL(request.url).searchParams.get("oid");
+
+    const orders = await getOrderTable(session.groupId);
+    if (!orders) {
+        return;
+    }
+
+    const details = await getOrderDetails(orderId);
+
+    return json({ orders, details });
+}
 
 export default function Dashboard() {
+    const loaderData = useLoaderData<typeof loader>();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    useEffect(() => {
+        const params = new URLSearchParams();
+
+        params.set("oid", loaderData.orders[0].id);
+
+        setSearchParams(params, {
+            preventScrollReset: true,
+        });
+    }, []);
+
     return (
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -94,14 +132,14 @@ export default function Dashboard() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <OrdersTable />
+                                <OrdersTable data={loaderData.orders} />
                             </CardContent>
                         </Card>
                     </TabsContent>
                 </Tabs>
             </div>
             <div>
-                <OrderDetails />
+                <OrderDetails details={loaderData.details} />
             </div>
         </main>
     );

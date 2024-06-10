@@ -18,6 +18,7 @@ import {
     TableRow,
 } from "~/app/components/ui/table";
 import { Customers } from "~/app/lib/defitions";
+import { timestampToDateString } from "~/app/lib/utils";
 
 export default function CustomerTable({
     customers,
@@ -66,7 +67,7 @@ export default function CustomerTable({
                                 {customer.phone_number}
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
-                                2024-02-14 02:14 PM
+                                {timestampToDateString(customer.created_at)}
                             </TableCell>
                             <TableCell>
                                 <DropdownMenu>

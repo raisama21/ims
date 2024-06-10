@@ -1,10 +1,11 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
 import z from "zod";
 
 export const CreateCategoriesFormSchema = z.object({
     categoryName: z
         .string()
         .trim()
+        .toLowerCase()
         .min(1, { message: "categories name required" })
         .min(3, {
             message: "categories name must be at lease 3 character long",
@@ -15,9 +16,7 @@ export async function validate(
     data: z.infer<typeof CreateCategoriesFormSchema>,
     groupId: string
 ) {
-    const formFields = CreateCategoriesFormSchema.safeParse({
-        categoryName: data.categoryName,
-    });
+    const formFields = CreateCategoriesFormSchema.safeParse(data);
 
     if (!formFields.success) {
         return {
@@ -42,6 +41,8 @@ export async function validate(
             },
         };
     }
+
+    return { safeParse: formFields };
 }
 
 export default async function createCategories(

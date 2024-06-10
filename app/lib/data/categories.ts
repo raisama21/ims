@@ -1,4 +1,4 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
 import { Categories } from "~/app/lib/defitions";
 
 export async function getAllCategories(groupId: string) {

@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, Link, useActionData } from "@remix-run/react";
+import { z } from "zod";
 
 import { Button } from "~/app/components/ui/button";
 import {
@@ -13,7 +14,10 @@ import {
 import { Input } from "~/app/components/ui/input";
 import { Label } from "~/app/components/ui/label";
 import { getSession } from "~/app/cookie.server";
-import createCustomers, { validate } from "~/app/lib/actions/customers/create";
+import createCustomers, {
+    validate,
+    AddCustomersFormSchema,
+} from "~/app/lib/actions/customers/create";
 
 export async function action({ request }: ActionFunctionArgs) {
     const session = await getSession(request);
@@ -22,19 +26,19 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const formData = await request.formData();
-    const customersData = {
-        firstName: String(formData.get("firstName")),
-        lastName: String(formData.get("lastName")),
-        email: String(formData.get("email")),
-        phoneNumber: Number(formData.get("phoneNumber")),
-    };
+    const customersData = Object.fromEntries(formData) as unknown as z.infer<
+        typeof AddCustomersFormSchema
+    >;
 
-    const errors = await validate(customersData, session.groupId);
+    const { safeParse, errors } = await validate(
+        customersData,
+        session.groupId
+    );
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    await createCustomers(customersData, session.groupId);
+    await createCustomers(safeParse.data, session.groupId);
 
     return redirect("/dashboard/customers");
 }
@@ -57,7 +61,7 @@ export default function CreateCustomers() {
                 </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Add Customers</CardTitle>
+                        <CardTitle>Add customers</CardTitle>
                         <CardDescription>
                             Add your customer information here.
                         </CardDescription>
@@ -73,13 +77,10 @@ export default function CreateCustomers() {
                                     className="w-full"
                                     placeholder="John"
                                 />
-                                {actionData?.state?.errors.firstName && (
+                                {actionData?.errors.firstName && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state?.errors
-                                                    .firstName[0]
-                                            }
+                                            {actionData?.errors.firstName[0]}
                                         </p>
                                     </div>
                                 )}
@@ -93,13 +94,10 @@ export default function CreateCustomers() {
                                     className="w-full"
                                     placeholder="Doe"
                                 />
-                                {actionData?.state?.errors.lastName && (
+                                {actionData?.errors.lastName && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state?.errors
-                                                    .lastName[0]
-                                            }
+                                            {actionData?.errors.lastName[0]}
                                         </p>
                                     </div>
                                 )}
@@ -113,10 +111,10 @@ export default function CreateCustomers() {
                                     className="w-full"
                                     placeholder="john.doe@example.com"
                                 />
-                                {actionData?.state?.errors.email && (
+                                {actionData?.errors.email && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {actionData?.state?.errors.email[0]}
+                                            {actionData?.errors.email[0]}
                                         </p>
                                     </div>
                                 )}
@@ -130,13 +128,92 @@ export default function CreateCustomers() {
                                     type="number"
                                     name="phoneNumber"
                                 />
-                                {actionData?.state?.errors.phoneNumber && (
+                                {actionData?.errors.phoneNumber && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.phoneNumber[0]}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>customers address</CardTitle>
+                        <CardDescription></CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-6">
+                            <div className="grid gap-3">
+                                <Label htmlFor="streetAddress">
+                                    Street Address
+                                </Label>
+                                <Input
+                                    id="streetAddress"
+                                    name="streetAddress"
+                                    type="text"
+                                    className="w-full"
+                                    placeholder="Pashupati Rd"
+                                />
+                                {actionData?.errors.streetAddress && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
                                             {
-                                                actionData?.state?.errors
-                                                    .phoneNumber[0]
+                                                actionData?.errors
+                                                    .streetAddress[0]
                                             }
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="city">City</Label>
+                                <Input
+                                    id="city"
+                                    name="city"
+                                    type="text"
+                                    className="w-full"
+                                    placeholder="Kathmandu"
+                                />
+                                {actionData?.errors.city && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.city[0]}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="provience">provience</Label>
+                                <Input
+                                    id="provience"
+                                    type="text"
+                                    name="provience"
+                                    className="w-full"
+                                    placeholder="Bagmati Pradesh"
+                                />
+                                {actionData?.errors.provience && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.provience[0]}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="postalCode">Postal Code</Label>
+                                <Input
+                                    id="postalCode"
+                                    type="number"
+                                    name="postalCode"
+                                    placeholder="46000"
+                                />
+                                {actionData?.errors.postalCode && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.postalCode[0]}
                                         </p>
                                     </div>
                                 )}

@@ -19,6 +19,7 @@ import {
     TableRow,
 } from "~/app/components/ui/table";
 import { Categories } from "~/app/lib/defitions";
+import { timestampToDateString } from "~/app/lib/utils";
 
 export default function CategoriesTable({
     categories,
@@ -47,7 +48,7 @@ export default function CategoriesTable({
                             </TableCell>
 
                             <TableCell className="hidden md:table-cell">
-                                2024-02-14 02:14 PM
+                                {timestampToDateString(category.created_at)}
                             </TableCell>
                             <TableCell>
                                 <DropdownMenu>

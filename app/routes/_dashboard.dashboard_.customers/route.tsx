@@ -2,7 +2,7 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 
-import { File, ListFilter, PlusCircle } from "lucide-react";
+import { ListFilter, PlusCircle } from "lucide-react";
 import { Button } from "~/app/components/ui/button";
 import {
     Card,
@@ -28,7 +28,7 @@ import {
 } from "~/app/components/ui/tabs";
 import CustomersTable from "./table";
 import { getSession } from "~/app/cookie.server";
-import {getDataForCustomerTable} from "~/app/lib/data/customers";
+import { getDataForCustomerTable } from "~/app/lib/data/customers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);

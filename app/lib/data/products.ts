@@ -1,4 +1,5 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
+
 import { Products } from "~/app/lib/defitions";
 
 export async function getAllProducts(groupId: string) {

@@ -6,6 +6,7 @@
     "scripts": {
         "build": "remix vite:build",
         "dev": "node ./server.js",
+        "dev:db": "docker compose up -d",
         "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         "prettier": "prettier . --write --ignore-unknown",
         "prettier:check": "prettier . --check --ignore-unknown",

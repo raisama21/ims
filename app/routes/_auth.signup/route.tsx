@@ -18,12 +18,12 @@ export async function action({ request }: ActionFunctionArgs) {
         typeof SignupFormSchema
     >;
 
-    const errors = await validate(signupData);
+    const { safeParse, errors } = await validate(signupData);
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    await signup(signupData);
+    await signup(safeParse.data);
 
     return redirect("/login");
 }
@@ -50,10 +50,10 @@ export default function Signup() {
                                 name="firstName"
                                 placeholder="John"
                             />
-                            {actionData?.state?.errors.firstName && (
+                            {actionData?.errors.firstName && (
                                 <div>
                                     <p className="pl-2 text-xs font-medium text-red-500">
-                                        {actionData?.state?.errors.firstName[0]}
+                                        {actionData?.errors.firstName[0]}
                                     </p>
                                 </div>
                             )}
@@ -66,10 +66,10 @@ export default function Signup() {
                                 name="lastName"
                                 placeholder="Doe"
                             />
-                            {actionData?.state?.errors.lastName && (
+                            {actionData?.errors.lastName && (
                                 <div>
                                     <p className="pl-2 text-xs font-medium text-red-500">
-                                        {actionData?.state?.errors.lastName[0]}
+                                        {actionData?.errors.lastName[0]}
                                     </p>
                                 </div>
                             )}
@@ -83,10 +83,10 @@ export default function Signup() {
                             name="businessName"
                             placeholder="ABC business"
                         />
-                        {actionData?.state?.errors.businessName && (
+                        {actionData?.errors.businessName && (
                             <div>
                                 <p className="pl-2 text-xs font-medium text-red-500">
-                                    {actionData?.state?.errors.businessName[0]}
+                                    {actionData?.errors.businessName[0]}
                                 </p>
                             </div>
                         )}
@@ -99,10 +99,10 @@ export default function Signup() {
                             name="email"
                             placeholder="m@example.com"
                         />
-                        {actionData?.state?.errors.email && (
+                        {actionData?.errors.email && (
                             <div>
                                 <p className="pl-2 text-xs font-medium text-red-500">
-                                    {actionData?.state?.errors.email[0]}
+                                    {actionData?.errors.email[0]}
                                 </p>
                             </div>
                         )}
@@ -113,10 +113,10 @@ export default function Signup() {
                         </div>
                         <Input id="password" type="password" name="password" />
 
-                        {actionData?.state?.errors.password && (
+                        {actionData?.errors.password && (
                             <div>
                                 <p className="pl-2 text-xs font-medium text-red-500">
-                                    {actionData?.state?.errors.password[0]}
+                                    {actionData?.errors.password[0]}
                                 </p>
                             </div>
                         )}

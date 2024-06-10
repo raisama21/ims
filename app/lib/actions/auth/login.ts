@@ -1,4 +1,4 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
 import * as argon from "argon2";
 import z from "zod";
 import { Users } from "~/app/lib/defitions";
@@ -7,6 +7,7 @@ export const LoginFormSchema = z.object({
     businessName: z
         .string()
         .trim()
+        .toLowerCase()
         .min(1, { message: "business name required" })
         .min(3, { message: "business name must be at lease 3 character long" }),
     email: z
@@ -23,11 +24,7 @@ export const LoginFormSchema = z.object({
 });
 
 export async function validate(data: z.infer<typeof LoginFormSchema>) {
-    const formField = LoginFormSchema.safeParse({
-        businessName: data.businessName,
-        email: data.email,
-        password: data.password,
-    });
+    const formField = LoginFormSchema.safeParse(data);
 
     if (!formField.success) {
         return {
@@ -75,6 +72,8 @@ export async function validate(data: z.infer<typeof LoginFormSchema>) {
             },
         };
     }
+
+    return { safeParse: formField };
 }
 
 export default async function authentication(

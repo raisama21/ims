@@ -1,4 +1,4 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
 
 export default async function deleteCategory(
     categoryId: string,

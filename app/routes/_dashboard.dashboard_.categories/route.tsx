@@ -1,4 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { z } from "zod";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
@@ -34,12 +35,15 @@ export async function action({ request }: ActionFunctionArgs) {
         typeof CreateCategoriesFormSchema
     >;
 
-    const errors = await validate(categoriesData, session.groupId);
+    const { safeParse, errors } = await validate(
+        categoriesData,
+        session.groupId
+    );
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    await createCategories(categoriesData, session.groupId);
+    await createCategories(safeParse.data, session.groupId);
 
     return null;
 }
@@ -84,11 +88,11 @@ export default function Categories() {
                                         type="text"
                                         name="categoryName"
                                     />
-                                    {actionData?.state?.errors.categoryName && (
+                                    {actionData?.errors.categoryName && (
                                         <div>
                                             <p className="pl-2 text-xs font-medium text-red-500">
                                                 {
-                                                    actionData.state.errors
+                                                    actionData.errors
                                                         .categoryName[0]
                                                 }
                                             </p>
@@ -99,7 +103,7 @@ export default function Categories() {
                         </CardContent>
                     </Card>
                     <div className="flex justify-end gap-2">
-                        <Button size="sm">Create User</Button>
+                        <Button size="sm">Create categories</Button>
                     </div>
                 </Form>
                 <Card className="col-span-2">

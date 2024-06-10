@@ -2,17 +2,16 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { getSession } from "~/app/cookie.server";
 import invariant from "tiny-invariant";
-import deleteCategory from "../lib/actions/categories/delete";
 
 export async function action({ request, params }: ActionFunctionArgs) {
-    invariant(params.categoryId, "param categoryId not found");
+    invariant(params.orderId, "param orderId not found");
 
     const session = await getSession(request);
     if (session.roles === "sales-person") {
         return;
     }
 
-    await deleteCategory(params.categoryId, session.groupId);
+    // await deleteOrder(params.orderId, session.groupId)
 
-    return redirect("/dashboard/categories");
+    return redirect("/dashboard/order");
 }

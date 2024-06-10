@@ -1,4 +1,4 @@
-import sql from "~/database/connect";
+import sql from "~/app/db.server";
 import * as argon from "argon2";
 import z from "zod";
 import { Users } from "~/app/lib/defitions";
@@ -25,10 +25,7 @@ export const CreateUserFormSchema = z.object({
         .min(1, { message: "password required" })
         .min(8, { message: "password must be at lease 8 character long" })
         .max(64, { message: "password must be at most 64 character long" }),
-    roles: z
-        .string()
-        .trim()
-        .min(1, { message: "roles required" }),
+    roles: z.string().trim().min(1, { message: "roles required" }),
 });
 
 export async function validate(data: z.infer<typeof CreateUserFormSchema>) {
