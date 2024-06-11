@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Form, Link } from "@remix-run/react";
 import {
     ChevronLeft,
     ChevronRight,
@@ -79,10 +79,23 @@ export default function OrderDetails({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Export</DropdownMenuItem>
+                            <Link to={`${details?.id}/edit`}>
+                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                            </Link>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>Trash</DropdownMenuItem>
+                            <Form
+                                method="POST"
+                                action={`${details?.id}/destroy`}
+                            >
+                                <DropdownMenuItem>
+                                    <button
+                                        type="submit"
+                                        className="w-full text-left"
+                                    >
+                                        Trash
+                                    </button>
+                                </DropdownMenuItem>
+                            </Form>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

@@ -1,7 +1,9 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { getSession } from "~/app/cookie.server";
 import invariant from "tiny-invariant";
+
+import { getSession } from "~/app/cookie.server";
+import deleteOrder from "~/app/lib/actions/orders/delete";
 
 export async function action({ request, params }: ActionFunctionArgs) {
     invariant(params.orderId, "param orderId not found");
@@ -11,7 +13,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return;
     }
 
-    // await deleteOrder(params.orderId, session.groupId)
+    await deleteOrder(params.orderId, session.groupId);
 
-    return redirect("/dashboard/order");
+    return redirect("/dashboard/orders");
 }
