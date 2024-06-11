@@ -76,7 +76,6 @@ export async function action({ request }: ActionFunctionArgs) {
     if (errors) {
         return json({ errors });
     }
-    console.log(safeParse.data);
 
     await createOrder(safeParse.data, session.groupId);
 
