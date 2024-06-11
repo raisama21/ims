@@ -1,5 +1,12 @@
 import { SquaresPlusIcon } from "@heroicons/react/24/outline";
-import { Home, Package, ShoppingCart, User, Users2 } from "lucide-react";
+import {
+    Home,
+    Package,
+    ShoppingCart,
+    User,
+    Users2,
+    BarChartBig,
+} from "lucide-react";
 
 export const links = [
     {
@@ -31,5 +38,10 @@ export const links = [
         name: "User Management",
         href: "/dashboard/user-management",
         icon: User,
+    },
+    {
+        name: "Sales Report",
+        href: "/dashboard/sales-report",
+        icon: BarChartBig,
     },
 ];

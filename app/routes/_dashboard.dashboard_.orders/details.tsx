@@ -82,7 +82,6 @@ export default function OrderDetails({
                             <Link to={`${details?.id}/edit`}>
                                 <DropdownMenuItem>Edit</DropdownMenuItem>
                             </Link>
-                            <DropdownMenuSeparator />
                             <Form
                                 method="POST"
                                 action={`${details?.id}/destroy`}

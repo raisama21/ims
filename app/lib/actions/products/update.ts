@@ -2,7 +2,7 @@ import sql from "~/app/db.server";
 import z from "zod";
 import { Products } from "~/app/lib/defitions";
 
-export const UpdateProductsFormSchema = z.object({
+export const EditProductsFormSchema = z.object({
     productName: z
         .string()
         .trim()
@@ -40,10 +40,10 @@ export const UpdateProductsFormSchema = z.object({
 });
 
 export async function validate(
-    data: z.infer<typeof UpdateProductsFormSchema>,
+    data: z.infer<typeof EditProductsFormSchema>,
     groupId: string
 ) {
-    const formFields = UpdateProductsFormSchema.safeParse(data);
+    const formFields = EditProductsFormSchema.safeParse(data);
 
     if (!formFields.success) {
         return {
@@ -65,10 +65,13 @@ export async function validate(
             },
         };
     }
+
+    return { safeParse: formFields };
 }
 
 export default async function updateProduct(
-    data: z.infer<typeof UpdateProductsFormSchema>,
+    data: z.infer<typeof EditProductsFormSchema>,
+    productId: string,
     groupId: string
 ) {
     const {
@@ -83,26 +86,16 @@ export default async function updateProduct(
 
     try {
         await sql`
-            INSERT INTO products (
-                group_id,
-                product_name,
-                description,
-                category,
-                status,
-                stock,
-                purchase_price,
-                selling_price
-            ) 
-            VALUES (
-                ${groupId},
-                ${productName},
-                ${description},
-                ${category},
-                ${status},
-                ${stock},
-                ${purchasePrice},
-                ${sellingPrice}
-            )
+            UPDATE products SET 
+                group_id = ${groupId},
+                product_name = ${productName},
+                description = ${description},
+                category = ${category},
+                status = ${status},
+                stock = ${stock},
+                purchase_price = ${purchasePrice},
+                selling_price = ${sellingPrice}
+            WHERE id = ${productId} AND group_id = ${groupId}
        `;
     } catch (error) {
         console.log("error while adding products: ", error);

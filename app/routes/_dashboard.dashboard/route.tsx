@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
 
-import { Link } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 import {
     Activity,
     ArrowUpRight,
@@ -31,14 +32,36 @@ import {
     TableRow,
 } from "~/app/components/ui/table";
 import { getSession } from "~/app/cookie.server";
+import {
+    getPaidAmount,
+    getPendingAmount,
+    getTotalCustomer,
+    getTotalRevenue,
+} from "~/app/lib/data/dashboard";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
+    if (!session) {
+        return;
+    }
 
-    return null;
+    const [totalRevenue, customer, paid, pending] = await Promise.all([
+        await getTotalRevenue(session.groupId),
+        await getTotalCustomer(session.groupId),
+        await getPaidAmount(session.groupId),
+        await getPendingAmount(session.groupId),
+    ]);
+
+    if (!totalRevenue && customer && paid && pending) {
+        return;
+    }
+
+    return json({ totalRevenue, customer, paid, pending });
 }
 
 export default function Dashboard() {
+    const loaderData = useLoaderData<typeof loader>();
+
     return (
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -50,7 +73,9 @@ export default function Dashboard() {
                         <IndianRupee className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">$45,231.89</div>
+                        <div className="text-2xl font-bold">
+                            ₹{loaderData.totalRevenue}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                             +20.1% from last month
                         </p>
@@ -64,7 +89,9 @@ export default function Dashboard() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">+2350</div>
+                        <div className="text-2xl font-bold">
+                            +{loaderData.customer?.count}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                             +180.1% from last month
                         </p>
@@ -73,12 +100,14 @@ export default function Dashboard() {
                 <Card x-chunk="dashboard-01-chunk-2">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Sales
+                            Paid
                         </CardTitle>
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">+12,234</div>
+                        <div className="text-2xl font-bold">
+                            +{loaderData.paid?.total}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                             +19% from last month
                         </p>
@@ -92,7 +121,9 @@ export default function Dashboard() {
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">+19</div>
+                        <div className="text-2xl font-bold">
+                            +{loaderData.pending?.total}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                             +201 since last hour
                         </p>

@@ -101,6 +101,11 @@ export default async function createOrder(
         }
 
         await sql`
+            INSERT INTO payments (order_id)
+            VALUES (${order.id})
+        `;
+
+        await sql`
             INSERT INTO "order_tracking" (
                 group_id,
                 order_id,

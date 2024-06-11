@@ -39,8 +39,9 @@ export type Products = {
     status: "in-stock" | "out-of-stock";
     sku: string;
     stock: number;
-    purcahse_price: number;
+    purchase_price: number;
     selling_price: number;
+    created_at: Date;
 };
 
 export type Orders = {

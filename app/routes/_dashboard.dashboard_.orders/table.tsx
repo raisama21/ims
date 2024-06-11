@@ -52,11 +52,11 @@ export default function OrdersTable({ data }: { data: OrderTableData[] }) {
                                 </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell">
-                                {"none"}
+                                {order.payment_method || "none"}
                             </TableCell>
                             <TableCell className="hidden sm:table-cell">
                                 <Badge className="text-xs" variant="secondary">
-                                    {"pending"}
+                                    {order.status}
                                 </Badge>
                             </TableCell>
                             <TableCell className="hidden md:table-cell">

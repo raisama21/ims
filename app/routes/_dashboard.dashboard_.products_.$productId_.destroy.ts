@@ -3,6 +3,7 @@ import { redirect } from "@remix-run/node";
 import invariant from "tiny-invariant";
 
 import { getSession } from "~/app/cookie.server";
+import deleteProduct from "~/app/lib/actions/products/delete";
 
 export async function action({ request, params }: ActionFunctionArgs) {
     invariant(params.productId, "params productId not found");
@@ -12,7 +13,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return;
     }
 
-    // await deleteProduct(params.productId, session.groupId);
+    await deleteProduct(params.productId, session.groupId);
 
-    return redirect("/dashboard/customers");
+    return redirect("/dashboard/products");
 }

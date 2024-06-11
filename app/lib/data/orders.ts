@@ -6,6 +6,8 @@ export type OrderTableData = {
     first_name: string;
     last_name: string;
     email: string;
+    payment_method: "e-wallet" | "mobile-banking" | "in-person";
+    status: "pending" | "paid";
     created_at: Date;
     total: number;
 };
@@ -18,9 +20,14 @@ export async function getOrderTable(groupId: string) {
                 customers.first_name,
                 customers.last_name,
                 customers.email,
+                payments.payment_method,
+                payments.status,
                 orders.created_at,
                 orders.total
-            FROM orders INNER JOIN customers ON orders.customer_id = customers.id
+            FROM orders INNER JOIN customers 
+                ON orders.customer_id = customers.id
+            INNER JOIN payments
+                on payments.order_id = orders.id
             WHERE orders.group_id = ${groupId}
         `;
 

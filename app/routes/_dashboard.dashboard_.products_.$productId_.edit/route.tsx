@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { redirect, json } from "@remix-run/node";
 import { Link, Form, useLoaderData, useActionData } from "@remix-run/react";
+import z from "zod";
 
 import { ChevronLeft, Upload } from "lucide-react";
 
@@ -31,49 +32,53 @@ import {
 } from "~/app/components/ui/table";
 import { Textarea } from "~/app/components/ui/textarea";
 import { getSession } from "~/app/cookie.server";
-import updateProduct, { validate } from "~/app/lib/actions/products/update";
+import updateProduct, {
+    EditProductsFormSchema,
+    validate,
+} from "~/app/lib/actions/products/update";
 import { getAllCategories } from "~/app/lib/data/categories";
+import { getProductDetails } from "~/app/lib/data/products";
+import invariant from "tiny-invariant";
 
 /**
  * generate sku based on category
  */
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
+    invariant(params.productId, "param productId not found");
     const session = await getSession(request);
     if (!session) {
         return;
     }
 
-    const categories = await getAllCategories(session.groupId);
-    if (!categories) {
+    const [categories, details] = await Promise.all([
+        await getAllCategories(session.groupId),
+        await getProductDetails(params.productId, session.groupId),
+    ]);
+    if (!categories && !details) {
         return;
     }
 
-    return json({ categories });
+    return json({ categories, details });
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
+    invariant(params.productId, "param productId not found");
     const session = await getSession(request);
     if (session.roles === "sales-person") {
         return;
     }
 
     const formData = await request.formData();
-    const productData = {
-        productName: String(formData.get("productName")),
-        description: String(formData.get("description")),
-        category: String(formData.get("category")),
-        status: String(formData.get("status")),
-        stock: Number(formData.get("stock")),
-        purchasePrice: Number(formData.get("purchasePrice")),
-        sellingPrice: Number(formData.get("sellingPrice")),
-    };
+    const productData = Object.fromEntries(formData) as unknown as z.infer<
+        typeof EditProductsFormSchema
+    >;
 
-    const errors = await validate(productData, session.groupId);
+    const { safeParse, errors } = await validate(productData, session.groupId);
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    await updateProduct(productData, session.groupId);
+    await updateProduct(safeParse.data, params.productId, session.groupId);
 
     return redirect("/dashboard/products");
 }
@@ -130,14 +135,15 @@ export default function Add() {
                                             name="productName"
                                             className="w-full"
                                             placeholder="Huawei MatePad T8"
+                                            defaultValue={
+                                                loaderData.details?.product_name
+                                            }
                                         />
-                                        {actionData?.state?.errors
-                                            .productName && (
+                                        {actionData?.errors.productName && (
                                             <div>
                                                 <p className="pl-2 text-xs font-medium text-red-500">
                                                     {
-                                                        actionData?.state
-                                                            ?.errors
+                                                        actionData?.errors
                                                             .productName[0]
                                                     }
                                                 </p>
@@ -153,14 +159,15 @@ export default function Add() {
                                             name="description"
                                             className="min-h-32"
                                             placeholder="It comes equipped with an octa-core chipset, which ensures that you can enjoy faster processing so that you can complete your tasks with ease"
+                                            defaultValue={
+                                                loaderData.details?.description
+                                            }
                                         />
-                                        {actionData?.state?.errors
-                                            .description && (
+                                        {actionData?.errors.description && (
                                             <div>
                                                 <p className="pl-2 text-xs font-medium text-red-500">
                                                     {
-                                                        actionData?.state
-                                                            ?.errors
+                                                        actionData?.errors
                                                             .description[0]
                                                     }
                                                 </p>
@@ -209,14 +216,16 @@ export default function Add() {
                                                     type="number"
                                                     name="stock"
                                                     placeholder="10"
+                                                    defaultValue={
+                                                        loaderData.details
+                                                            ?.stock
+                                                    }
                                                 />
-                                                {actionData?.state?.errors
-                                                    .stock && (
+                                                {actionData?.errors.stock && (
                                                     <div>
                                                         <p className="pl-2 text-xs font-medium text-red-500">
                                                             {
                                                                 actionData
-                                                                    ?.state
                                                                     ?.errors
                                                                     .stock[0]
                                                             }
@@ -236,14 +245,17 @@ export default function Add() {
                                                     type="number"
                                                     name="purchasePrice"
                                                     placeholder="14000"
+                                                    defaultValue={
+                                                        loaderData.details
+                                                            ?.purchase_price
+                                                    }
                                                 />
-                                                {actionData?.state?.errors
+                                                {actionData?.errors
                                                     .purchasePrice && (
                                                     <div>
                                                         <p className="pl-2 text-xs font-medium text-red-500">
                                                             {
                                                                 actionData
-                                                                    ?.state
                                                                     ?.errors
                                                                     .purchasePrice[0]
                                                             }
@@ -263,14 +275,17 @@ export default function Add() {
                                                     type="number"
                                                     name="sellingPrice"
                                                     placeholder="18800"
+                                                    defaultValue={
+                                                        loaderData.details
+                                                            ?.selling_price
+                                                    }
                                                 />
-                                                {actionData?.state?.errors
+                                                {actionData?.errors
                                                     .sellingPrice && (
                                                     <div>
                                                         <p className="pl-2 text-xs font-medium text-red-500">
                                                             {
                                                                 actionData
-                                                                    ?.state
                                                                     ?.errors
                                                                     .sellingPrice[0]
                                                             }
@@ -322,12 +337,12 @@ export default function Add() {
                                                 )}
                                             </SelectContent>
                                         </Select>
-                                        {actionData?.state?.errors.category && (
+                                        {actionData?.errors.category && (
                                             <div>
                                                 <p className="pl-2 text-xs font-medium text-red-500">
                                                     {
-                                                        actionData?.state
-                                                            ?.errors.category[0]
+                                                        actionData?.errors
+                                                            .category[0]
                                                     }
                                                 </p>
                                             </div>
@@ -362,12 +377,12 @@ export default function Add() {
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        {actionData?.state?.errors.status && (
+                                        {actionData?.errors.status && (
                                             <div>
                                                 <p className="pl-2 text-xs font-medium text-red-500">
                                                     {
-                                                        actionData?.state
-                                                            ?.errors.status[0]
+                                                        actionData?.errors
+                                                            .status[0]
                                                     }
                                                 </p>
                                             </div>

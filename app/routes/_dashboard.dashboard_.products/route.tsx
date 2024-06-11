@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
 
-import { File, ListFilter, PlusCircle } from "lucide-react";
+import { ListFilter, PlusCircle } from "lucide-react";
 import { Button } from "~/app/components/ui/button";
 import {
     Card,
@@ -25,30 +26,35 @@ import {
     TabsTrigger,
 } from "~/app/components/ui/tabs";
 import ProductsTable from "./table";
-import { Link } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 import { getSession } from "~/app/cookie.server";
+import { getAllProducts } from "~/app/lib/data/products";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
+    if (!session) {
+        return;
+    }
 
-    return null;
+    const products = await getAllProducts(session.groupId);
+    if (!products) {
+        return;
+    }
+
+    return json({ products });
 }
 
 export default function Products() {
+    const loaderData = useLoaderData<typeof loader>();
+
     return (
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <Tabs defaultValue="all">
                 <div className="flex items-center">
                     <TabsList>
                         <TabsTrigger value="all">All</TabsTrigger>
-                        <TabsTrigger value="active">Active</TabsTrigger>
-                        <TabsTrigger value="draft">Draft</TabsTrigger>
-                        <TabsTrigger
-                            value="archived"
-                            className="hidden sm:flex"
-                        >
-                            Archived
-                        </TabsTrigger>
+                        <TabsTrigger value="active">In stock</TabsTrigger>
+                        <TabsTrigger value="draft">Out of stock</TabsTrigger>
                     </TabsList>
                     <div className="ml-auto flex items-center gap-2">
                         <DropdownMenu>
@@ -68,26 +74,16 @@ export default function Products() {
                                 <DropdownMenuLabel>Filter by</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuCheckboxItem checked>
-                                    Active
+                                    All
                                 </DropdownMenuCheckboxItem>
                                 <DropdownMenuCheckboxItem>
-                                    Draft
+                                    In stock
                                 </DropdownMenuCheckboxItem>
                                 <DropdownMenuCheckboxItem>
-                                    Archived
+                                    Out of stock
                                 </DropdownMenuCheckboxItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1"
-                        >
-                            <File className="h-3.5 w-3.5" />
-                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                Export
-                            </span>
-                        </Button>
                         <Link to="/dashboard/products/add">
                             <Button size="sm" className="h-8 gap-1">
                                 <PlusCircle className="h-3.5 w-3.5" />
@@ -108,7 +104,7 @@ export default function Products() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ProductsTable />
+                            <ProductsTable products={loaderData.products} />
                         </CardContent>
                         <CardFooter>
                             <div className="text-xs text-muted-foreground">
