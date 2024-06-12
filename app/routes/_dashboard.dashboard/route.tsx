@@ -45,18 +45,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return;
     }
 
-    const [totalRevenue, customer, paid, pending] = await Promise.all([
-        await getTotalRevenue(session.groupId),
-        await getTotalCustomer(session.groupId),
-        await getPaidAmount(session.groupId),
-        await getPendingAmount(session.groupId),
-    ]);
+    const [totalRevenue, customer, totalPaidAmount, totalPendingAmount] =
+        await Promise.all([
+            await getTotalRevenue(session.groupId),
+            await getTotalCustomer(session.groupId),
+            await getPaidAmount(session.groupId),
+            await getPendingAmount(session.groupId),
+        ]);
 
-    if (!totalRevenue && customer && paid && pending) {
+    if (!totalRevenue && customer && totalPaidAmount && totalPendingAmount) {
         return;
     }
 
-    return json({ totalRevenue, customer, paid, pending });
+    return json({
+        totalRevenue,
+        customer,
+        totalPaidAmount,
+        totalPendingAmount,
+    });
 }
 
 export default function Dashboard() {
@@ -106,7 +112,7 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            +{loaderData.paid?.total}
+                            +{loaderData.totalPaidAmount}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             +19% from last month
@@ -122,7 +128,7 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            +{loaderData.pending?.total}
+                            +{loaderData.totalPendingAmount}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             +201 since last hour

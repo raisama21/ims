@@ -31,13 +31,18 @@ export async function getTotalCustomer(groupId: string) {
 
 export async function getPaidAmount(groupId: string) {
     try {
-        const [payment] = await sql<{ total: number }[]>`
+        const payment = await sql<{ total: number }[]>`
             SELECT orders.total FROM payments 
             INNER JOIN orders ON payments.order_id = orders.id
             WHERE payments.status = 'paid' AND orders.group_id = ${groupId}
        `;
 
-        return payment;
+        let totalPaidAmount = 0;
+        for (let i = 0; i < payment.length; i++) {
+            totalPaidAmount += Number(payment[i].total);
+        }
+
+        return totalPaidAmount;
     } catch (error) {
         console.log("error while getting 'customers' count: ", error);
     }
@@ -45,13 +50,18 @@ export async function getPaidAmount(groupId: string) {
 
 export async function getPendingAmount(groupId: string) {
     try {
-        const [payment] = await sql<{ total: number }[]>`
+        const payment = await sql<{ total: number }[]>`
             SELECT orders.total FROM payments 
             INNER JOIN orders ON payments.order_id = orders.id
             WHERE payments.status = 'pending' AND orders.group_id = ${groupId}
        `;
 
-        return payment;
+        let totalPendingAmount = 0;
+        for (let i = 0; i < payment.length; i++) {
+            totalPendingAmount += Number(payment[i].total);
+        }
+
+        return totalPendingAmount;
     } catch (error) {
         console.log("error while getting 'customers' count: ", error);
     }
