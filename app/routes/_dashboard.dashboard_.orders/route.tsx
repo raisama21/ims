@@ -40,13 +40,12 @@ export async function loader({ request }: ActionFunctionArgs) {
         return;
     }
 
-    const orderId = new URL(request.url).searchParams.get("oid");
-
     const orders = await getOrderTable(session.groupId);
     if (!orders) {
-        return;
+        throw new Response("Not Found", { status: 404 });
     }
 
+    const orderId = new URL(request.url).searchParams.get("oid");
     const details = await getOrderDetails(orderId);
 
     return json({ orders, details });
@@ -57,9 +56,9 @@ export default function Dashboard() {
     const [searchParams, setSearchParams] = useSearchParams();
 
     useEffect(() => {
-        const params = new URLSearchParams();
+        let params = new URLSearchParams();
 
-        params.set("oid", loaderData.orders[0].id);
+        params.set("oid", loaderData.orders[0]?.id);
 
         setSearchParams(params, {
             preventScrollReset: true,

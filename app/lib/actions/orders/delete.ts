@@ -7,6 +7,10 @@ export default async function deleteOrder(orderId: string, groupId: string) {
         `;
 
         await sql`
+            DELETE FROM payments WHERE order_id = ${orderId}
+        `;
+
+        await sql`
             DELETE FROM order_tracking 
             WHERE order_id = ${orderId} AND group_id = ${groupId}
         `;
