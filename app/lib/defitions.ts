@@ -11,6 +11,7 @@ export type Users = {
     email: string;
     password: string;
     roles: "admin" | "product-manager" | "sales-person";
+    created_at: Date;
 };
 
 export type Categories = {

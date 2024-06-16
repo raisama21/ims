@@ -10,8 +10,32 @@ export async function getAllUser(groupId: string) {
                 first_name,
                 last_name,
                 email,
-                roles
+                roles,
+                created_at
             FROM users WHERE group_id = ${groupId}
+       `;
+
+        return users;
+    } catch (error) {
+        console.log("error while getting all 'users': ", error);
+    }
+}
+
+export type Roles = "admin" | "product-manager" | "sales-person";
+
+export async function getUsersBasedOnRoles(groupId: string, roles: Roles) {
+    try {
+        const users = await sql<Users[]>`
+            SELECT 
+                id,
+                group_id,
+                first_name,
+                last_name,
+                email,
+                roles,
+                created_at
+            FROM users WHERE group_id = ${groupId} 
+            AND roles = ${roles}
        `;
 
         return users;

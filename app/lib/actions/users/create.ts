@@ -7,11 +7,13 @@ export const CreateUserFormSchema = z.object({
     firstName: z
         .string()
         .trim()
+        .toLowerCase()
         .min(1, { message: "first name required" })
         .min(3, { message: "first name must be at lease 3 character long" }),
     lastName: z
         .string()
         .trim()
+        .toLowerCase()
         .min(1, { message: "last name required" })
         .min(3, { message: "last name must be at lease 3 character long" }),
     email: z
@@ -29,13 +31,7 @@ export const CreateUserFormSchema = z.object({
 });
 
 export async function validate(data: z.infer<typeof CreateUserFormSchema>) {
-    const formFields = CreateUserFormSchema.safeParse({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        password: data.password,
-        roles: data.roles,
-    });
+    const formFields = CreateUserFormSchema.safeParse(data);
 
     if (!formFields.success) {
         return {
@@ -56,6 +52,8 @@ export async function validate(data: z.infer<typeof CreateUserFormSchema>) {
             },
         };
     }
+
+    return {safeParse: formFields};
 }
 
 export default async function createUser(

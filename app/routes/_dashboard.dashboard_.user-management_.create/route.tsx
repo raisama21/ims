@@ -40,12 +40,12 @@ export async function action({ request }: ActionFunctionArgs) {
         typeof CreateUserFormSchema
     >;
 
-    const errors = await validate(userData);
+    const { safeParse, errors } = await validate(userData);
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    await createUser(userData, session.groupId);
+    await createUser(safeParse.data, session.groupId);
 
     return redirect("/dashboard/user-management");
 }
@@ -84,13 +84,10 @@ export default function CreateUser() {
                                     className="w-full"
                                     placeholder="John"
                                 />
-                                {actionData?.state?.errors.firstName && (
+                                {actionData?.errors.firstName && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state?.errors
-                                                    .firstName[0]
-                                            }
+                                            {actionData?.errors.firstName[0]}
                                         </p>
                                     </div>
                                 )}
@@ -104,13 +101,10 @@ export default function CreateUser() {
                                     className="w-full"
                                     placeholder="Doe"
                                 />
-                                {actionData?.state?.errors.lastName && (
+                                {actionData?.errors.lastName && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state?.errors
-                                                    .lastName[0]
-                                            }
+                                            {actionData?.errors.lastName[0]}
                                         </p>
                                     </div>
                                 )}
@@ -124,10 +118,10 @@ export default function CreateUser() {
                                     className="w-full"
                                     placeholder="john.doe@example.com"
                                 />
-                                {actionData?.state?.errors.email && (
+                                {actionData?.errors.email && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {actionData?.state?.errors.email[0]}
+                                            {actionData?.errors.email[0]}
                                         </p>
                                     </div>
                                 )}
@@ -139,13 +133,10 @@ export default function CreateUser() {
                                     type="password"
                                     name="password"
                                 />
-                                {actionData?.state?.errors.password && (
+                                {actionData?.errors.password && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state?.errors
-                                                    .password[0]
-                                            }
+                                            {actionData?.errors.password[0]}
                                         </p>
                                     </div>
                                 )}
@@ -168,10 +159,10 @@ export default function CreateUser() {
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
-                                {actionData?.state?.errors.roles && (
+                                {actionData?.errors.roles && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {actionData?.state?.errors.roles[0]}
+                                            {actionData?.errors.roles[0]}
                                         </p>
                                     </div>
                                 )}

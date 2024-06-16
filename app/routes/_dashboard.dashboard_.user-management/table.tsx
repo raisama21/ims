@@ -21,6 +21,7 @@ import {
     TableRow,
 } from "~/app/components/ui/table";
 import { Users } from "~/app/lib/defitions";
+import { timestampToDateString } from "~/app/lib/utils";
 
 export default function UserManagementTable({ users }: { users: Users[] }) {
     return (
@@ -60,7 +61,7 @@ export default function UserManagementTable({ users }: { users: Users[] }) {
                                 </Badge>
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
-                                2024-02-14 02:14 PM
+                                {timestampToDateString(user.created_at)}
                             </TableCell>
                             <TableCell>
                                 <DropdownMenu>
@@ -82,7 +83,21 @@ export default function UserManagementTable({ users }: { users: Users[] }) {
                                         </DropdownMenuLabel>
                                         <Link to={`${user.id}/edit`}>
                                             <DropdownMenuItem>
-                                                Edit
+                                                <button
+                                                    className={clsx(
+                                                        "w-full text-left",
+                                                        user.roles ===
+                                                            "admin" &&
+                                                            "cursor-not-allowed"
+                                                    )}
+                                                    disabled={
+                                                        user.roles === "admin"
+                                                            ? true
+                                                            : false
+                                                    }
+                                                >
+                                                    Edit
+                                                </button>
                                             </DropdownMenuItem>
                                         </Link>
                                         <Form
