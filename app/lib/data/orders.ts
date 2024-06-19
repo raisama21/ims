@@ -1,5 +1,5 @@
 import sql from "~/app/db.server";
-import { OrderTracking } from "../defitions";
+import { OrderTracking } from "~/app/lib/defitions";
 
 export type OrderTableData = {
     id: string;
@@ -8,7 +8,7 @@ export type OrderTableData = {
     email: string;
     payment_method: "e-wallet" | "mobile-banking" | "in-person";
     status: "pending" | "paid";
-    created_at: Date;
+    created_at: string;
     total: number;
 };
 
@@ -51,6 +51,7 @@ export type OrderDetails = {
     city: string;
     postal_code: number;
     products: [{ name: string; quantity: number; price: number }];
+    created_at: string;
 };
 
 export async function getOrderDetails(orderId: string | null) {
@@ -62,6 +63,7 @@ export async function getOrderDetails(orderId: string | null) {
                 orders.delivery_charge,
                 orders.discount_in_percentage,
                 orders.total,
+                orders.created_at,
                 customers.first_name,
                 customers.last_name,
                 customers.email,
@@ -84,6 +86,7 @@ export async function getOrderDetails(orderId: string | null) {
                 orders.delivery_charge,
                 orders.discount_in_percentage,
                 orders.total,
+                orders.created_at,
                 customers.first_name,
                 customers.last_name,
                 customers.email,

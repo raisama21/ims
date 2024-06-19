@@ -17,13 +17,13 @@ import {
     TableHeader,
     TableRow,
 } from "~/app/components/ui/table";
-import { Customers } from "~/app/lib/defitions";
+import { CustomerTableData } from "~/app/lib/data/customers";
 import { timestampToDateString } from "~/app/lib/utils";
 
 export default function CustomerTable({
     customers,
 }: {
-    customers: Customers[];
+    customers: CustomerTableData[];
 }) {
     return (
         <Table>
@@ -58,10 +58,12 @@ export default function CustomerTable({
                                 </div>
                             </TableCell>
                             <TableCell>
-                                <Badge variant="outline">Paid</Badge>
+                                <Badge variant="outline">
+                                    {customer.status}
+                                </Badge>
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
-                                ₹{"2500"}
+                                ₹{customer.total}
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
                                 {customer.phone_number}

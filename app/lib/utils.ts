@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function timestampToDateString(timestamp: Date) {
+export function timestampToDateString(timestamp: string) {
     const date = new Date(timestamp);
 
     return date.toLocaleDateString("en-US", {

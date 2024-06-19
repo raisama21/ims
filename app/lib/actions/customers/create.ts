@@ -24,25 +24,13 @@ export const AddCustomersFormSchema = z.object({
         .string()
         .min(1, { message: "phone number required" })
         .transform((val) => parseInt(val, 10)),
-    streetAddress: z
-        .string()
-        .trim()
-        .toLowerCase()
-        .min(1, { message: "street address required" }),
-    city: z
-        .string()
-        .trim()
-        .toLowerCase()
-        .min(1, { message: "city name required" }),
-    provience: z
-        .string()
-        .trim()
-        .toLowerCase()
-        .min(1, { message: "provience name required" }),
+    streetAddress: z.string().trim().toLowerCase().optional(),
+    city: z.string().trim().toLowerCase().optional(),
+    provience: z.string().trim().toLowerCase().optional(),
     postalCode: z
         .string()
-        .min(1, { message: "postal code required" })
-        .transform((val) => parseInt(val, 10)),
+        .transform((val) => parseInt(val, 10))
+        .optional(),
 });
 
 export async function validate(
@@ -119,10 +107,10 @@ export default async function createCustomers(
             )
             VALUES (
                 ${customer.id},
-                ${streetAddress},
-                ${city},
-                ${provience},
-                ${postalCode}
+                ${streetAddress ?? ""},
+                ${city ?? ""},
+                ${provience ?? ""},
+                ${postalCode ?? 0}
             )
         `;
     } catch (error: any) {

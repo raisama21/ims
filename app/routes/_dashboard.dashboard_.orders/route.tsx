@@ -1,8 +1,12 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData, useSearchParams } from "@remix-run/react";
+import {
+    useLoaderData,
+    useRouteError,
+    useSearchParams,
+} from "@remix-run/react";
 
-import { File, ListFilter } from "lucide-react";
+import { ListFilter } from "lucide-react";
 import { Button } from "~/app/components/ui/button";
 import {
     Card,
@@ -42,10 +46,11 @@ export async function loader({ request }: ActionFunctionArgs) {
 
     const orders = await getOrderTable(session.groupId);
     if (!orders) {
-        throw new Response("Not Found", { status: 404 });
+        throw new Error("Oh no! Something went wrong!");
     }
 
     const orderId = new URL(request.url).searchParams.get("oid");
+
     const details = await getOrderDetails(orderId);
 
     return json({ orders, details });

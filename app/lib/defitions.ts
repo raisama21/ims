@@ -11,14 +11,14 @@ export type Users = {
     email: string;
     password: string;
     roles: "admin" | "product-manager" | "sales-person";
-    created_at: Date;
+    created_at: string;
 };
 
 export type Categories = {
     id: string;
     group_id: string;
     category_name: string;
-    created_at: Date;
+    created_at: string;
 };
 
 export type Customers = {
@@ -28,7 +28,7 @@ export type Customers = {
     last_name: string;
     email: string;
     phone_number: number;
-    created_at: Date;
+    created_at: string;
 };
 
 export type Products = {
@@ -42,7 +42,7 @@ export type Products = {
     stock: number;
     purchase_price: number;
     selling_price: number;
-    created_at: Date;
+    created_at: string;
 };
 
 export type Orders = {
@@ -60,7 +60,7 @@ export type Orders = {
     postal_code: number;
     payment_method: "e-wallet" | "mobile-banking" | "in-person";
     status: "pending" | "paid";
-    date: Date;
+    date: string;
 };
 
 export type OrderTracking = {

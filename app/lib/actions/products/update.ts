@@ -51,21 +51,6 @@ export async function validate(
         };
     }
 
-    const { productName } = formFields.data;
-
-    const [product] = await sql<Products[]>`
-        SELECT product_name FROM products 
-        WHERE product_name = ${productName} AND group_id = ${groupId}
-    `;
-
-    if (product?.product_name === productName) {
-        return {
-            errors: {
-                productName: ["product already exists"],
-            },
-        };
-    }
-
     return { safeParse: formFields };
 }
 

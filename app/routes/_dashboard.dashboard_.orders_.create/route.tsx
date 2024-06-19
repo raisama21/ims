@@ -35,6 +35,7 @@ import createOrder, {
     validate,
 } from "~/app/lib/actions/orders/create";
 import { z } from "zod";
+import { calculateNetAmount } from "./utils";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
@@ -86,12 +87,30 @@ export default function Create() {
     const loaderData = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
-    const [searchParam, setSearchParam] = useSearchParams();
+    const [searchParam, setSearchParams] = useSearchParams();
 
     const [products, setProduct] = useState<string[]>([]);
     const selectedProducts = loaderData.products?.filter((product) => {
         return products.includes(product.product_name);
     });
+
+    if (!selectedProducts) {
+        return;
+    }
+
+    let subTotal = 0;
+    for (const product of selectedProducts) {
+        const quantity = Number(
+            searchParam.get(`${product.product_name}_quantity`)
+        );
+
+        subTotal += product.selling_price * quantity;
+    }
+
+    const discount = Number(searchParam.get("discount"));
+    const deliveryCharge = Number(searchParam.get("deliveryCharge"));
+
+    const total = calculateNetAmount(subTotal, discount, deliveryCharge);
 
     return (
         <main className="px-8">
@@ -186,6 +205,24 @@ export default function Create() {
                                                 id="quantity"
                                                 type="number"
                                                 name="quantity"
+                                                onChange={(
+                                                    e: ChangeEvent<HTMLInputElement>
+                                                ) => {
+                                                    setSearchParams(
+                                                        (prev) => {
+                                                            prev.set(
+                                                                `${product.product_name}_quantity`,
+                                                                e.target.value
+                                                            );
+
+                                                            return prev;
+                                                        },
+                                                        {
+                                                            preventScrollReset:
+                                                                true,
+                                                        }
+                                                    );
+                                                }}
                                             />
                                             {actionData?.errors.quantity && (
                                                 <div>
@@ -246,15 +283,7 @@ export default function Create() {
                                     type="number"
                                     placeholder="9000"
                                     name="subTotal"
-                                    onChange={(
-                                        e: ChangeEvent<HTMLInputElement>
-                                    ) => {
-                                        const params = new URLSearchParams();
-                                        params.set("sub-total", e.target.value);
-                                        setSearchParam(params, {
-                                            preventScrollReset: true,
-                                        });
-                                    }}
+                                    value={subTotal}
                                 />
                                 {actionData?.errors.subTotal && (
                                     <div>
@@ -273,6 +302,21 @@ export default function Create() {
                                     type="number"
                                     name="deliveryCharge"
                                     placeholder="1000"
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>
+                                    ) => {
+                                        setSearchParams(
+                                            (prev) => {
+                                                prev.set(
+                                                    "deliveryCharge",
+                                                    e.target.value
+                                                );
+
+                                                return prev;
+                                            },
+                                            { preventScrollReset: true }
+                                        );
+                                    }}
                                 />
                                 {actionData?.errors.deliveryCharge && (
                                     <div>
@@ -292,6 +336,21 @@ export default function Create() {
                                     type="number"
                                     name="discount"
                                     placeholder="10%"
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>
+                                    ) => {
+                                        setSearchParams(
+                                            (prev) => {
+                                                prev.set(
+                                                    "discount",
+                                                    e.target.value
+                                                );
+
+                                                return prev;
+                                            },
+                                            { preventScrollReset: true }
+                                        );
+                                    }}
                                 />
                                 {actionData?.errors.discount && (
                                     <div>
@@ -308,6 +367,7 @@ export default function Create() {
                                     type="number"
                                     name="total"
                                     placeholder="9000"
+                                    value={total}
                                 />
                                 {actionData?.errors.total && (
                                     <div>

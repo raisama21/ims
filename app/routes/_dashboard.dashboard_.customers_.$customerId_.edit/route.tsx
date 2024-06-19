@@ -2,6 +2,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
+import { z } from "zod";
 
 import { Button } from "~/app/components/ui/button";
 import {
@@ -14,8 +15,11 @@ import {
 import { Input } from "~/app/components/ui/input";
 import { Label } from "~/app/components/ui/label";
 import { getSession } from "~/app/cookie.server";
-import updateCustomers, { validate } from "~/app/lib/actions/customers/update";
-import { getOneCustomer } from "~/app/lib/data/customers";
+import updateCustomer, {
+    UpdateCustomersFormSchema,
+    validate,
+} from "~/app/lib/actions/customers/update";
+import { getOneCustomerData } from "~/app/lib/data/customers";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
     invariant(params.customerId, "param customerId not found");
@@ -25,41 +29,38 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         return;
     }
 
-    const customer = await getOneCustomer(params.customerId, session.groupId);
-    if (!customer) {
+    const user = await getOneCustomerData(params.customerId, session.groupId);
+    if (!user) {
         return;
     }
 
-    return json({ customer });
+    return json({ user });
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
     invariant(params.customerId, "param customerId not found");
 
     const session = await getSession(request);
-    if (session?.roles === "sales-person") {
+    if (!session) {
         return;
     }
 
     const formData = await request.formData();
-    const customersData = {
-        firstName: String(formData.get("firstName")),
-        lastName: String(formData.get("lastName")),
-        email: String(formData.get("email")),
-        phoneNumber: Number(formData.get("phoneNumber")),
-    };
+    const customersData = Object.fromEntries(formData) as unknown as z.infer<
+        typeof UpdateCustomersFormSchema
+    >;
 
-    const errors = await validate(customersData);
+    const { safeParse, errors } = await validate(customersData);
     if (errors) {
-        return json({ state: errors });
+        return json({ errors });
     }
 
-    await updateCustomers(customersData, params.customerId, session.groupId);
+    await updateCustomer(safeParse.data, session.groupId, params.customerId);
 
     return redirect("/dashboard/customers");
 }
 
-export default function EditCustomers() {
+export default function EditCustomer() {
     const actionData = useActionData<typeof action>();
     const loaderData = useLoaderData<typeof loader>();
 
@@ -78,9 +79,9 @@ export default function EditCustomers() {
                 </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Edit Customers</CardTitle>
+                        <CardTitle>Add customers</CardTitle>
                         <CardDescription>
-                            Edit your customer information here.
+                            Add your customer information here.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -93,17 +94,12 @@ export default function EditCustomers() {
                                     type="text"
                                     className="w-full"
                                     placeholder="John"
-                                    defaultValue={
-                                        loaderData.customer.first_name
-                                    }
+                                    defaultValue={loaderData.user.first_name}
                                 />
-                                {actionData?.state?.errors.firstName && (
+                                {actionData?.errors.firstName && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state?.errors
-                                                    .firstName[0]
-                                            }
+                                            {actionData?.errors.firstName[0]}
                                         </p>
                                     </div>
                                 )}
@@ -115,16 +111,12 @@ export default function EditCustomers() {
                                     name="lastName"
                                     type="text"
                                     className="w-full"
-                                    placeholder="Doe"
-                                    defaultValue={loaderData.customer.last_name}
+                                    defaultValue={loaderData.user.last_name}
                                 />
-                                {actionData?.state?.errors.lastName && (
+                                {actionData?.errors.lastName && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {
-                                                actionData?.state?.errors
-                                                    .lastName[0]
-                                            }
+                                            {actionData?.errors.lastName[0]}
                                         </p>
                                     </div>
                                 )}
@@ -137,12 +129,12 @@ export default function EditCustomers() {
                                     name="email"
                                     className="w-full"
                                     placeholder="john.doe@example.com"
-                                    defaultValue={loaderData.customer.email}
+                                    defaultValue={loaderData.user.email}
                                 />
-                                {actionData?.state?.errors.email && (
+                                {actionData?.errors.email && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
-                                            {actionData?.state?.errors.email[0]}
+                                            {actionData?.errors.email[0]}
                                         </p>
                                     </div>
                                 )}
@@ -155,17 +147,100 @@ export default function EditCustomers() {
                                     id="phoneNumber"
                                     type="number"
                                     name="phoneNumber"
+                                    defaultValue={loaderData.user.phone_number}
+                                />
+                                {actionData?.errors.phoneNumber && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.phoneNumber[0]}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>customers address</CardTitle>
+                        <CardDescription></CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-6">
+                            <div className="grid gap-3">
+                                <Label htmlFor="streetAddress">
+                                    Street Address
+                                </Label>
+                                <Input
+                                    id="streetAddress"
+                                    name="streetAddress"
+                                    type="text"
+                                    className="w-full"
+                                    placeholder="Pashupati Rd"
                                     defaultValue={
-                                        loaderData.customer.phone_number
+                                        loaderData.user?.street_address
                                     }
                                 />
-                                {actionData?.state?.errors.phoneNumber && (
+                                {actionData?.errors.streetAddress && (
                                     <div>
                                         <p className="pl-2 text-xs font-medium text-red-500">
                                             {
-                                                actionData?.state?.errors
-                                                    .phoneNumber[0]
+                                                actionData?.errors
+                                                    .streetAddress[0]
                                             }
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="city">City</Label>
+                                <Input
+                                    id="city"
+                                    name="city"
+                                    type="text"
+                                    className="w-full"
+                                    placeholder="Kathmandu"
+                                    defaultValue={loaderData.user?.city}
+                                />
+                                {actionData?.errors.city && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.city[0]}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="provience">provience</Label>
+                                <Input
+                                    id="provience"
+                                    type="text"
+                                    name="provience"
+                                    className="w-full"
+                                    placeholder="Bagmati Pradesh"
+                                    defaultValue={loaderData.user?.provience}
+                                />
+                                {actionData?.errors.provience && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.provience[0]}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="postalCode">Postal Code</Label>
+                                <Input
+                                    id="postalCode"
+                                    type="number"
+                                    name="postalCode"
+                                    placeholder="46000"
+                                    defaultValue={loaderData.user?.postal_code}
+                                />
+                                {actionData?.errors.postalCode && (
+                                    <div>
+                                        <p className="pl-2 text-xs font-medium text-red-500">
+                                            {actionData?.errors.postalCode[0]}
                                         </p>
                                     </div>
                                 )}

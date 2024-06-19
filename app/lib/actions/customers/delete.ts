@@ -6,6 +6,10 @@ export default async function deleteCustomer(
 ) {
     try {
         await sql`
+            DELETE FROM customer_address WHERE customer_id = ${customerId}
+        `;
+
+        await sql`
             DELETE FROM customers 
             WHERE id = ${customerId} AND group_id = ${groupId}
         `;

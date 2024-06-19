@@ -32,11 +32,17 @@ import {
 import { Separator } from "~/app/components/ui/separator";
 import type { OrderDetails } from "~/app/lib/data/orders";
 
-export default function OrderDetails({
-    details,
-}: {
-    details: OrderDetails | undefined;
-}) {
+export default function OrderDetails({ details }: { details: OrderDetails }) {
+    function timestampToDateString(timestamp: string) {
+        const date = new Date(timestamp);
+
+        return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+    }
+
     return (
         <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
             <CardHeader className="flex flex-row items-start bg-muted/50">
@@ -52,7 +58,9 @@ export default function OrderDetails({
                             <span className="sr-only">Copy Order ID</span>
                         </Button>
                     </CardTitle>
-                    <CardDescription>Date: November 23, 2023</CardDescription>
+                    <CardDescription>
+                        Date: {timestampToDateString(details?.created_at)}
+                    </CardDescription>
                 </div>
                 <div className="ml-auto flex items-center gap-1">
                     <Link to={`${details?.id}/track-order`}>
@@ -136,7 +144,7 @@ export default function OrderDetails({
                             <span className="text-muted-foreground">
                                 Discount
                             </span>
-                            <span>₹{details?.discount_in_percentage}</span>
+                            <span>{details?.discount_in_percentage}%</span>
                         </li>
                         <li className="flex items-center justify-between font-semibold">
                             <span className="text-muted-foreground">Total</span>
@@ -148,7 +156,7 @@ export default function OrderDetails({
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-3">
                         <div className="font-semibold">
-                            Delivery Information
+                            Shipping information
                         </div>
                         <address className="grid gap-0.5 not-italic text-muted-foreground">
                             <span>
@@ -210,7 +218,10 @@ export default function OrderDetails({
             </CardContent>
             <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
                 <div className="text-xs text-muted-foreground">
-                    Updated <time dateTime="2023-11-23">November 23, 2023</time>
+                    Updated{" "}
+                    <time dateTime="2023-11-23">
+                        {timestampToDateString(details?.created_at)}
+                    </time>
                 </div>
                 <Pagination className="ml-auto mr-0 w-auto">
                     <PaginationContent>

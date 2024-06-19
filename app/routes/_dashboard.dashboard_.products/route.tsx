@@ -26,14 +26,31 @@ import {
     TabsTrigger,
 } from "~/app/components/ui/tabs";
 import ProductsTable from "./table";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData, useSearchParams } from "@remix-run/react";
 import { getSession } from "~/app/cookie.server";
-import { getAllProducts } from "~/app/lib/data/products";
+import {
+    Status,
+    getAllProducts,
+    getProductBasedOnStatus,
+} from "~/app/lib/data/products";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
     if (!session) {
         return;
+    }
+
+    const params = new URL(request.url).searchParams.get("status");
+    if (params) {
+        const products = await getProductBasedOnStatus(
+            params as Status,
+            session.groupId
+        );
+        if (!products) {
+            return;
+        }
+
+        return json({ products });
     }
 
     const products = await getAllProducts(session.groupId);
@@ -46,44 +63,52 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Products() {
     const loaderData = useLoaderData<typeof loader>();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const status = searchParams.get("status");
 
     return (
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <Tabs defaultValue="all">
                 <div className="flex items-center">
                     <TabsList>
-                        <TabsTrigger value="all">All</TabsTrigger>
-                        <TabsTrigger value="active">In stock</TabsTrigger>
-                        <TabsTrigger value="draft">Out of stock</TabsTrigger>
+                        <TabsTrigger
+                            value="all"
+                            onClick={() => {
+                                const params = new URLSearchParams();
+                                params.delete("status");
+                                setSearchParams(params, {
+                                    preventScrollReset: true,
+                                });
+                            }}
+                        >
+                            All
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="in-stock"
+                            onClick={() => {
+                                const params = new URLSearchParams();
+                                params.set("status", "in-stock");
+                                setSearchParams(params, {
+                                    preventScrollReset: true,
+                                });
+                            }}
+                        >
+                            In stock
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="out-of-stock"
+                            onClick={() => {
+                                const params = new URLSearchParams();
+                                params.set("status", "out-of-stock");
+                                setSearchParams(params, {
+                                    preventScrollReset: true,
+                                });
+                            }}
+                        >
+                            Out of stock
+                        </TabsTrigger>
                     </TabsList>
                     <div className="ml-auto flex items-center gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 gap-1"
-                                >
-                                    <ListFilter className="h-3.5 w-3.5" />
-                                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                        Filter
-                                    </span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuCheckboxItem checked>
-                                    All
-                                </DropdownMenuCheckboxItem>
-                                <DropdownMenuCheckboxItem>
-                                    In stock
-                                </DropdownMenuCheckboxItem>
-                                <DropdownMenuCheckboxItem>
-                                    Out of stock
-                                </DropdownMenuCheckboxItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
                         <Link to="/dashboard/products/add">
                             <Button size="sm" className="h-8 gap-1">
                                 <PlusCircle className="h-3.5 w-3.5" />
@@ -94,7 +119,7 @@ export default function Products() {
                         </Link>
                     </div>
                 </div>
-                <TabsContent value="all">
+                <TabsContent value={status || "all"}>
                     <Card x-chunk="dashboard-06-chunk-0">
                         <CardHeader>
                             <CardTitle>Products</CardTitle>
