@@ -1,13 +1,3 @@
-import { Form, Link } from "@remix-run/react";
-import { MoreHorizontal } from "lucide-react";
-import { Button } from "~/app/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuTrigger,
-} from "~/app/components/ui/dropdown-menu";
 import {
     Table,
     TableBody,
@@ -16,43 +6,47 @@ import {
     TableHeader,
     TableRow,
 } from "~/app/components/ui/table";
+import { SalesReport } from "~/app/lib/data/sales";
 import { timestampToDateString } from "~/app/lib/utils";
-import { SalesReport } from "./data";
 
-export default function SalesReportTable({ sales }: { sales: SalesReport[] }) {
+export default function SalesReportTable({
+    sales,
+}: {
+    sales: SalesReport[] | undefined;
+}) {
     return (
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Total Orders</TableHead>
-                    <TableHead>Total Sales</TableHead>
-                    <TableHead className=" md:table-cell">
-                        Total unit sold
+                    <TableHead>Product name</TableHead>
+                    <TableHead>Purchase price</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                        Selling price
                     </TableHead>
-                    <TableHead className=" md:table-cell">
-                        Product Name
+                    <TableHead className="hidden md:table-cell">
+                        Quantity
                     </TableHead>
-                    <TableHead>Product sales</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                        Total amount
+                    </TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {sales.map((sale) => {
+                {sales?.map((sale) => {
                     return (
-                        <TableRow>
-                            <TableCell className="font-medium">
-                                {sale.total_orders}
+                        <TableRow key={sale.product_name + sale.created_at}>
+                            <TableCell>{sale.product_name}</TableCell>
+                            <TableCell className="hidden md:table-cell">
+                                {sale?.purchase_price}
                             </TableCell>
-                            <TableCell className=" md:table-cell">
-                                {sale.total_sales}
+                            <TableCell className="hidden md:table-cell">
+                                {sale?.selling_price}
                             </TableCell>
-                            <TableCell className=" md:table-cell">
-                                {sale.total_units_sold}
+                            <TableCell className="hidden md:table-cell">
+                                {sale?.quantity}
                             </TableCell>
-                            <TableCell className=" md:table-cell">
-                                {sale.product_name}
-                            </TableCell>
-                            <TableCell className=" md:table-cell">
-                                {sale.product_sales}
+                            <TableCell className="hidden md:table-cell">
+                                {sale?.total}
                             </TableCell>
                         </TableRow>
                     );

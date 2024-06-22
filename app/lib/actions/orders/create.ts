@@ -15,7 +15,13 @@ export const CreateOrdersFormSchema = z.object({
             .min(1, { message: "required" })
             .transform((val) => parseInt(val, 10))
     ),
-    price: z.array(
+    sellingPrice: z.array(
+        z
+            .string()
+            .min(1, { message: "required" })
+            .transform((val) => parseInt(val, 10))
+    ),
+    purchasePrice: z.array(
         z
             .string()
             .min(1, { message: "required" })
@@ -89,13 +95,15 @@ export default async function createOrder(
                    order_id,
                    product_name,
                    quantity,
-                   price
+                   selling_price,
+                   purchase_price
                ) 
                VALUES (
                    ${order.id},
                    ${data.product[i]},
                    ${data.quantity[i]},
-                   ${data.price[i]}
+                   ${data.sellingPrice[i]},
+                   ${data.purchasePrice[i]}
                )
             `;
         }

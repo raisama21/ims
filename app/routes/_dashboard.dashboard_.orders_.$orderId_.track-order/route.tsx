@@ -228,7 +228,7 @@ export default function TrackOrder() {
                                         <Button
                                             type="submit"
                                             disabled={
-                                                loaderData.details.shipped_at
+                                                loaderData.details.delivered_at
                                                     ? true
                                                     : false
                                             }

@@ -1,6 +1,5 @@
 import { Form, Link } from "@remix-run/react";
 import { MoreHorizontal } from "lucide-react";
-import { Badge } from "~/app/components/ui/badge";
 import { Button } from "~/app/components/ui/button";
 import {
     DropdownMenu,
@@ -17,23 +16,19 @@ import {
     TableHeader,
     TableRow,
 } from "~/app/components/ui/table";
-import { CustomerTableData } from "~/app/lib/data/customers";
+import { Customers } from "~/app/lib/defitions";
 import { timestampToDateString } from "~/app/lib/utils";
 
 export default function CustomerTable({
     customers,
 }: {
-    customers: CustomerTableData[];
+    customers: Customers[];
 }) {
     return (
         <Table>
             <TableHeader>
                 <TableRow>
                     <TableHead>Customer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                        Amount
-                    </TableHead>
                     <TableHead className="hidden md:table-cell">
                         Phone Number
                     </TableHead>
@@ -56,14 +51,6 @@ export default function CustomerTable({
                                 <div className="hidden text-sm text-muted-foreground md:inline">
                                     {customer.email}
                                 </div>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="outline">
-                                    {customer.status}
-                                </Badge>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                                ₹{customer.total}
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
                                 {customer.phone_number}

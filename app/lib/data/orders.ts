@@ -50,7 +50,7 @@ export type OrderDetails = {
     street_address: string;
     city: string;
     postal_code: number;
-    products: [{ name: string; quantity: number; price: number }];
+    products: [{ name: string; quantity: number; selling_price: number }];
     created_at: string;
 };
 
@@ -71,7 +71,7 @@ export async function getOrderDetails(orderId: string | null) {
                 customer_address.street_address,
                 customer_address.city,
                 customer_address.postal_code,
-                jsonb_agg(jsonb_build_object('name', order_details.product_name, 'quantity', order_details.quantity, 'price', order_details.price)) AS products
+                jsonb_agg(jsonb_build_object('name', order_details.product_name, 'quantity', order_details.quantity, 'price', order_details.selling_price)) AS products
             FROM orders
             INNER JOIN order_details
                 ON order_details.order_id = orders.id

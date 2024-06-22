@@ -65,7 +65,8 @@ export async function action({ request }: ActionFunctionArgs) {
     const orderData = {
         product: formData.getAll("product"),
         quantity: formData.getAll("quantity"),
-        price: formData.getAll("price"),
+        sellingPrice: formData.getAll("sellingPrice"),
+        purchasePrice: formData.getAll("purchasePrice"),
         subTotal: formData.get("subTotal"),
         total: formData.get("total"),
         customer: formData.get("customer"),
@@ -175,23 +176,48 @@ export default function Create() {
                                             )}
                                         </div>
                                         <div>
-                                            <Label htmlFor="price">
+                                            <Label htmlFor="sellingPrice">
                                                 Product price
                                             </Label>
                                             <Input
-                                                id="price"
+                                                id="sellingPrice"
                                                 type="number"
-                                                name="price"
+                                                name="sellingPrice"
                                                 defaultValue={
                                                     product.selling_price
                                                 }
                                             />
-                                            {actionData?.errors.price && (
+                                            {actionData?.errors
+                                                .sellingPrice && (
                                                 <div>
                                                     <p className="pl-2 text-xs font-medium text-red-500">
                                                         {
                                                             actionData?.errors
-                                                                .price[0]
+                                                                .sellingPrice[0]
+                                                        }
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="hidden">
+                                            <Label htmlFor="purchasePrice">
+                                                Product purchase price
+                                            </Label>
+                                            <Input
+                                                id="purchasePrice"
+                                                type="number"
+                                                name="purchasePrice"
+                                                defaultValue={
+                                                    product.purchase_price
+                                                }
+                                            />
+                                            {actionData?.errors
+                                                .purchasePrice && (
+                                                <div>
+                                                    <p className="pl-2 text-xs font-medium text-red-500">
+                                                        {
+                                                            actionData?.errors
+                                                                .purchasePrice[0]
                                                         }
                                                     </p>
                                                 </div>
